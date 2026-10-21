@@ -29,7 +29,7 @@ cu126 = ["torch>=2.5"]
 pfn_repro = "pfn_repro.main:main"
 
 [dependency-groups]
-dev = ["pytest>=8", "hypothesis>=6.100", "beartype>=0.19", "ruff>=0.6", "pyright[nodejs]>=1.1.380", "pre-commit>=3.7,<4.7"]  # 4.7 needs git >= 2.31
+dev = ["pytest>=8", "hypothesis>=6.100", "beartype>=0.19", "ruff>=0.6", "pyright[nodejs]>=1.1.380", "pre-commit>=3.7,<4.6.1"]  # 4.6.1 needs git >= 2.31
 notebooks = ["jupyterlab>=4", "ipykernel>=6.29", "nbconvert>=7.16", "matplotlib>=3.8", "nbstripout>=0.7"]
 
 [tool.uv]

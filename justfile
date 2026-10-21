@@ -125,12 +125,13 @@ figures:
     for f in scripts/figures/*.py; do echo "$f"; {{py}} "$f"; done
 
 # --- remote box (PFN_REPRO_REMOTE_HOST / _REMOTE_DIR in .env) ---------------------------
-# Code moves by git over ssh (no GitHub credentials needed on the box); sweeps there run from frozen
+# Code moves by git over ssh (no GitHub credentials needed on the box; the pre-push test hook is for
+# GitHub pushes and is skipped here); sweeps there run from frozen
 # worktrees, so a push never breaks them. Only dependency changes under active sweeps need force=1.
 
 # put the committed HEAD on the box and check it out there: just push [force=1]
 push force="":
-    git -c push.default=current push --quiet --force {{remote_host}}:{{remote_dir}} HEAD:refs/heads/incoming
+    git -c push.default=current push --quiet --no-verify --force {{remote_host}}:{{remote_dir}} HEAD:refs/heads/incoming
     ssh {{remote_host}} "cd {{remote_dir}} && .venv/bin/python -m pfn_repro.tracking.cli sync-code incoming {{ if force != "" { "--force" } else { "" } }}"
 
 # runs of one experiment back, plus the sweep tags created on the box: just pull <experiment>
@@ -143,7 +144,7 @@ pull experiment:
 # first time / dependency changes: repo, venv and .env on the box (extra defaults to cu126)
 remote-setup extra="cu126":
     ssh {{remote_host}} 'mkdir -p {{remote_dir}} && cd {{remote_dir}} && ([ -d .git ] || git init -q)'
-    git -c push.default=current push --quiet --force {{remote_host}}:{{remote_dir}} HEAD:refs/heads/incoming
+    git -c push.default=current push --quiet --no-verify --force {{remote_host}}:{{remote_dir}} HEAD:refs/heads/incoming
     ssh {{remote_host}} 'cd {{remote_dir}} && git checkout -q --detach incoming && PATH=$HOME/.local/bin:$PATH uv sync --extra {{extra}} && ([ -f .env ] || cp envs/remote.env.example .env) && (grep -q TORCH_EXTRA .env || echo PFN_REPRO_TORCH_EXTRA={{extra}} >> .env)'
 
 # run a cli command on the remote, e.g. just remote sweep detached pilot experiment=x seed=0,1,2

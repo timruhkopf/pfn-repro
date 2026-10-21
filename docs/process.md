@@ -688,7 +688,7 @@ session and reminds you at natural checkpoints (the `workflow` skill).
 | CI (GitHub Actions) | `uv sync --extra cpu --group notebooks --frozen` → `just lint` (ruff, pyright) → `just test-all` (incl. slow: reproduction, notebook execution) → `just smoke` → `just notebooks-check` → `just refs-check` |
 
 Commit hooks stay fast on purpose: tracked runs need a commit first, so slow commits push you toward
-untracked runs. `pre-commit` is kept below 4.7 because 4.7 needs git ≥ 2.31.
+untracked runs. `pre-commit` is kept below 4.6.1, which needs git ≥ 2.31.
 
 ### Tests
 
