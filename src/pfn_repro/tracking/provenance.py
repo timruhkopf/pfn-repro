@@ -41,7 +41,8 @@ class GitState:
 
 def git(repo: Path, *args: str) -> str:
     # -C: never rely on the cwd (Hydra may chdir into the run dir).
-    return subprocess.check_output(["git", "-C", str(repo), *args], text=True).strip()
+    # stderr captured: e.g. `rev-parse HEAD` before a repo's first commit is expected to fail, quietly
+    return subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, check=True).stdout.strip()
 
 
 def git_state(repo: Path | None = None) -> GitState:
