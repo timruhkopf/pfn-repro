@@ -1,0 +1,7 @@
+# PFNs4BO-style PFN (surrogates/pfn.py); max_x_dim comes from the prior. Defaults: the smoke size.
+_target_: pfn_repro.surrogates.pfn.PFN
+d_model: 64
+n_heads: 4
+n_layers: 4
+d_ff: 128
+n_bins: 64

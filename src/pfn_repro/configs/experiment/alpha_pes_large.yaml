@@ -1,0 +1,16 @@
+# @package _global_
+# Original launch: n_steps=400000 with task.trainer.deadline=2026-10-21T05:50 task.trainer.fit_to_deadline=true
+# (pfn-acqpolicy scripts/ulysses_alpha.sh); the cosine schedule was fitted to the deadline.
+# The recipe of the registered `alpha_pes_large` (stage 2, PES; pfn-acqpolicy 4d92fd5; 186,299 steps).
+defaults:
+  - /prior: bnn
+  - override /task: train_alpha
+task:
+  device: cuda
+  stage: alpha
+  variant: pes
+  calibration_batches: 200
+  base_checkpoint: pfn_large
+  conditioned_checkpoint: alpha_conditioned_large
+  trainer: {n_steps: 400000, warmup_steps: 2000, log_every: 1000, save_every: 10000, mixed_precision: true}
+  validation: {every_n_steps: 5000}

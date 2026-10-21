@@ -1,0 +1,5 @@
+# @package _global_
+# pfn_large against the smoke checkpoint on the same held-out draws (the original eval_pfn_large).
+defaults:
+  - /prior: bnn
+  - override /task: eval_pfn

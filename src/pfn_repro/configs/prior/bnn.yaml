@@ -1,0 +1,11 @@
+# BNN function prior (PFNs4BO-style) of every registered checkpoint: BNNPrior defaults in priors/bnn.py.
+# Only x_dim / batch / seed / ECDF vary per use, set in code. Changing these makes a different prior.
+name: bnn
+depth_range: [8, 32]
+width_range: [32, 128]
+log_amp_range: [8.0, 20.0]
+bias_std: 0.1
+sparseness: 0.145
+preactivation_noise_std_range: [0.0003, 0.0014]
+output_noise_std_range: [0.0004, 0.0013]
+frac_relevant_features: 0.7

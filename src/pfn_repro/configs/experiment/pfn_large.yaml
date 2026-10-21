@@ -1,0 +1,19 @@
+# @package _global_
+# The recipe of the registered `pfn_large` (trained in pfn-acqpolicy at 0b5683e, MLflow 9ce11fd3):
+# 6.6M params, 1000 bins, n_train in [1, 100], 1.5M steps x 64 functions; ~24.5 h on one RTX 3090.
+# Kept to retrain or extend it; the checkpoint itself is registered in checkpoints.py.
+defaults:
+  - /prior: bnn
+  - /surrogate: pfn
+  - override /task: train_pfn
+surrogate: {d_model: 256, n_heads: 8, n_layers: 8, d_ff: 1024, n_bins: 1000}
+task:
+  device: cuda
+  trainer:
+    n_steps: 1500000
+    warmup_steps: 15000
+    log_every: 1000
+    save_every: 20000
+    mixed_precision: true
+  validation:
+    every_n_steps: 5000

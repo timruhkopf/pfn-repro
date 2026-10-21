@@ -1,0 +1,15 @@
+# @package _global_
+# eval_pfn on the smoke checkpoint only, tiny sizes (tests, CI: needs no large checkpoint).
+defaults:
+  - /prior: bnn
+  - override /task: eval_pfn
+task:
+  models: [pfn_smoke]
+  dims: [1, 2]
+  context_sizes: [3, 10]
+  n_functions: 8
+  n_test: 20
+  n_boot: 50
+  val_every: {}
+  timing: {batch: 2, n_test: 10, reps: 1}
+  slice: {n_candidates: 16, n_functions: 2, n_grid: 50, density_x: 20, max_bins: 32, contexts: [3, 8]}

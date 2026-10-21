@@ -1,0 +1,21 @@
+# The alpha-PFN checkpoints (tasks/eval_alpha.py; notebooks/04_*_alpha_pfn.ipynb).
+name: eval_alpha
+base: pfn_large
+conditioned: alpha_conditioned_large
+alpha: alpha_pes_large
+threads: 8
+val_every: 5000
+gate_dims: [1, 2, 4, 6]
+panels:
+  seed: 9001
+  n_functions: 3
+  n_grid: 400
+  density_x: 160
+  max_bins: 250
+  contexts: [4, 10]
+agreement:
+  seed: 9100
+  dims: [2, 4, 6]
+  n_functions: 32
+  n_candidates: 1024
+  context_multiples: [2, 6, 12]

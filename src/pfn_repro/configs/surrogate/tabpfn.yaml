@@ -1,0 +1,8 @@
+# TabPFN-v2-style surrogate (surrogates/tabpfn.py): cell tokens, feature + item attention, thinking rows.
+_target_: pfn_repro.surrogates.tabpfn.TabPFN
+d_model: 64
+n_heads: 4
+n_layers: 4
+d_ff: 128
+n_bins: 64
+n_thinking_rows: 8

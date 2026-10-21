@@ -1,0 +1,21 @@
+# Predictive quality of registered checkpoints (tasks/eval_pfn.py; notebooks/03_*_pfn_quality.ipynb).
+name: eval_pfn
+models: [pfn_large, pfn_smoke]   # registry names; the first is the main model
+threads: 8                # torch CPU threads, fixed for the timing
+dims: [1, 2, 3, 4, 5, 6]
+context_sizes: [1, 2, 3, 5, 10, 20, 30, 50, 75, 100]
+n_functions: 256
+n_test: 200
+data_seed: 555_000        # + d; disjoint from training validation (10_000 + d) and the gate (777_000 + d)
+chunk: 32
+n_boot: 1000
+val_every: {pfn_large: 5000}   # validation cadence in training (null: inferred from the history)
+timing: {batch: 16, n_test: 200, reps: 7}
+slice:
+  seed: 4242
+  n_candidates: 256
+  n_functions: 3          # the most 'interesting' 1-d draws
+  n_grid: 400
+  density_x: 160          # x positions kept for the density heatmap
+  max_bins: 250           # bins merged (exact mass) to at most this many
+  contexts: [3, 8, 20, 50]

@@ -1,0 +1,44 @@
+# alpha-PFN stages on the BNN prior (tasks/train_alpha.py). Checkpoints: registry names or paths.
+name: train_alpha
+device: auto
+stage: conditioned        # conditioned (stage 1) | alpha (stage 2)
+variant: pes              # stage 2: pes (= Entropy Search) | mes | jes
+base_checkpoint: pfn_smoke
+conditioned_checkpoint: null
+reinit_head: true         # stage 2: the output head predicts alpha~, not y
+calibration_batches: 50   # stage 2: alpha~ draws for the quantile borders
+batch_size: 64
+episodes_per_function: 4  # reuse a function batch + its x* for this many steps (cost)
+trace:                    # our choices for alpha-PFN's unspecified Algorithm-1 parameters
+  alpha_range: [0.0, 0.8]
+  sigma_range: [0.01, 0.2]
+  eps: 0.2
+  n_rounds: 8
+optimum:
+  n_dense: 4096
+  n_refine: 4
+  refine_steps: 0
+  zoom_rounds: 3
+  n_zoom: 512
+  zoom_sigma: 0.05
+trainer:
+  n_steps: 1000
+  min_train: 1
+  max_train: 100
+  n_test: 128
+  lr: 1.0e-4
+  warmup_steps: 100
+  grad_clip: 1.0
+  log_every: 100
+  save_every: null
+  mixed_precision: false
+  deadline: null            # ISO local time: save and stop then (training/trainer.py)
+  fit_to_deadline: false
+  calib_steps: 300
+  deadline_margin: 0.9
+validation:
+  dims: [1, 2, 4, 6]
+  context_sizes: [5, 20, 50]
+  n_functions: 64
+  n_points: 200
+  every_n_steps: null

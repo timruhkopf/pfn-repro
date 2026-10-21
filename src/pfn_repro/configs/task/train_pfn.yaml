@@ -1,0 +1,23 @@
+# Pretraining a surrogate on a prior (tasks/train_pfn.py). Experiments select /prior and /surrogate.
+name: train_pfn
+device: auto
+x_dim: 6               # BNN: max input dims; MF: max hyperparameters (the fidelity comes on top)
+variable_dim_min: 1    # batch-uniform d in [variable_dim_min, x_dim], fresh every step
+batch_size: 64
+trainer:
+  n_steps: 1000
+  min_train: 1
+  max_train: 100
+  n_test: 256
+  lr: 3.0e-4
+  warmup_steps: 100
+  grad_clip: 1.0
+  log_every: 100
+  save_every: null
+  mixed_precision: false   # bf16 autocast, CUDA only
+validation:
+  dims: [1, 2, 3, 4, 5, 6]
+  context_sizes: [5, 20, 50]
+  n_functions: 64
+  n_points: 200
+  every_n_steps: null      # null: every trainer.log_every

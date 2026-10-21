@@ -1,0 +1,18 @@
+# Changes here will be overwritten by Copier; do NOT edit manually
+_commit: v0.3.0
+_src_path: /home/ruhkopf/PycharmProjects/research-template
+author: Tim Ruhkopf
+compute:
+- remote
+cuda_extra: cu126
+description: Reproducible PFN surrogates, priors and amortized acquisitions (PFNs4BO-style
+    PFN, TabPFN-v2-style surrogate, alpha-PFN), with pinned checkpoints, for reuse
+    as a dependency.
+email: timruhkopf@googlemail.com
+github_user: timruhkopf
+mlflow: true
+optuna: false
+package_name: pfn_repro
+project_name: pfn-repro
+python: '3.12'
+training: false

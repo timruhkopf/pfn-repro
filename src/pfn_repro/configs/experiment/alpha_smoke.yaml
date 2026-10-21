@@ -1,0 +1,13 @@
+# @package _global_
+# Stage 1 for a few steps from the smoke PFN, on CPU (stage 2 needs a conditioned checkpoint file:
+#   task.stage=alpha task.conditioned_checkpoint=<run dir>/checkpoint.pt).
+defaults:
+  - /prior: bnn
+  - override /task: train_alpha
+task:
+  base_checkpoint: pfn_smoke
+  batch_size: 4
+  calibration_batches: 2
+  optimum: {n_dense: 256, n_zoom: 64, zoom_rounds: 1}
+  trainer: {n_steps: 6, min_train: 2, max_train: 8, n_test: 16, warmup_steps: 2, log_every: 3}
+  validation: {dims: [1, 2], context_sizes: [5], n_functions: 4, n_points: 16}
