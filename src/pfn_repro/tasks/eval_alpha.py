@@ -148,7 +148,7 @@ def panels(base, cond, alpha, info: str, prior_kwargs: dict, p: DictConfig) -> d
                             "n": n,
                             "x": xs[xi.ravel()],
                             "bin": bi.ravel(),
-                            "density": dens.ravel().astype(np.float32),
+                            "density": dens.ravel().astype(np.float16),  # small: the snapshot is committed
                         }
                     )
                 )

@@ -16,6 +16,6 @@ slice:
   n_candidates: 256
   n_functions: 3          # the most 'interesting' 1-d draws
   n_grid: 400
-  density_x: 160          # x positions kept for the density heatmap
-  max_bins: 250           # bins merged (exact mass) to at most this many
+  density_x: 120          # x positions kept for the density heatmap
+  max_bins: 200           # bins merged (exact mass) to at most this many
   contexts: [3, 8, 20, 50]

@@ -217,7 +217,7 @@ def slices_1d(models: dict, prior_kwargs: dict, s: DictConfig) -> dict[str, pd.D
                             "n": n,
                             "x": xs[xi.ravel()],
                             "bin": bi.ravel(),
-                            "density": d.ravel().astype(np.float32),
+                            "density": d.ravel().astype(np.float16),  # small: the snapshot is committed
                         }
                     )
                 )

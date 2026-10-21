@@ -10,8 +10,8 @@ panels:
   seed: 9001
   n_functions: 3
   n_grid: 400
-  density_x: 160
-  max_bins: 250
+  density_x: 120
+  max_bins: 200
   contexts: [4, 10]
 agreement:
   seed: 9100
