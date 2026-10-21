@@ -15,7 +15,8 @@ def _edges(centres: np.ndarray, lo: float = 0.0, hi: float = 1.0) -> np.ndarray:
 
 def density_matrix(density: pd.DataFrame, borders: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Rows (x, bin, density) of one panel + its (bin, lo, hi) -> (x edges, y edges, density [n_x, n_bins])."""
-    xs = np.sort(density["x"].unique())
+    xs = np.sort(density["x"].to_numpy(dtype=float))
+    xs = np.unique(xs)
     m = density.pivot_table(index="x", columns="bin", values="density").reindex(index=xs)
     b = borders.sort_values("bin")
     y_edges = np.concatenate([b["lo"].to_numpy(), b["hi"].to_numpy()[-1:]])
