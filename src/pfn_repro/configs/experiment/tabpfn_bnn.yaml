@@ -1,0 +1,25 @@
+# @package _global_
+# TabPFN-v2-style surrogate on the BNN prior, overnight pilot (issue #1). Same prior, ECDF, validation sets and
+# n_train range as pfn_large, so its validation curve compares with pfn_large's history at equal steps.
+# Size from a timing probe on ulysses (2026-10-21): d_model 192 / 8 layers / 32 thinking rows ~ 0.39 s/step
+# at batch 64 with bf16; d_model 256 runs out of memory at batch 64. ~4.7M params (pfn_large: 6.6M).
+# Launch with the deadline: task.trainer.deadline=<ISO> (the cosine schedule is fitted to end by then).
+defaults:
+  - /prior: bnn
+  - /surrogate: tabpfn
+  - override /task: train_pfn
+surrogate: {d_model: 192, n_heads: 8, n_layers: 8, d_ff: 768, n_bins: 1000, n_thinking_rows: 32}
+task:
+  device: cuda
+  trainer:
+    n_steps: 1500000
+    warmup_steps: 5000
+    log_every: 1000
+    save_every: 10000
+    mixed_precision: true
+    deadline: null
+    fit_to_deadline: true
+    calib_steps: 300
+    deadline_margin: 0.9
+  validation:
+    every_n_steps: 5000

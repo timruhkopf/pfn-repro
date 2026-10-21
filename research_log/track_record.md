@@ -35,3 +35,15 @@ with deliverables and open questions.
   - template v0.3.2/v0.3.3: pre-commit 4.6.1 needs git ≥ 2.31; just ran recipes with dash
     (''); remote-ps matched itself; notebook cell ids; default_stages;
   - here: the density tables were too large to commit (float16, coarser grid).
+
+### 2026-10-21 14:25 — correction of the two entries above; TabPFN pilot scheduled
+
+- **Correction:** the two entries above carry wrong times (14:30 and 15:15 were written without reading
+  the clock). The reproduction checks were launched at 13:49 (sweep ids `*_134915`, `*_134916`) and
+  finished around 14:10. Their content stands.
+- Mandate (Tim, 14:15): train TabPFN on the BNN prior tonight on ulysses. Issue #1, branch
+  `exp/1-tabpfn-bnn`.
+- Timing probe on ulysses (bf16, batch 64, n_train ≤ 100, 256 test points): d_model 128/6 layers
+  ≈ 0.20 s/step; 192/8 ≈ 0.39 s/step; 256/8 runs out of memory. Chosen: 192/8, 32 thinking rows. Cost:
+  one night, ~11.5 GPU-h, with the cosine schedule fitted to the 07:30 deadline.
+- Template v0.4.0 adds `--start-at` (plan and freeze now, start later), used for this launch.
