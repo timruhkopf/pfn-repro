@@ -1,77 +1,63 @@
 # pfn-repro
 
-<!-- Project-facing README: this is what a reviewer opens from your CV (~60 s).
-     The research process lives in docs/process.md (owned by the template, updated by `copier update`). -->
+> Reproducible PFN surrogates, priors and amortized acquisitions for Bayesian optimization, with pinned
+> checkpoints, to be used as a dependency by research repos.
 
-[![CI](https://github.com/timruhkopf/pfn-repro/actions/workflows/ci.yml/badge.svg)](https://github.com/timruhkopf/pfn-repro/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.12-blue.svg)](pyproject.toml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+**How we work:** [docs/process.md](docs/process.md) · **Using it from another repo:** [docs/dependency_guide.md](docs/dependency_guide.md) · **Checkpoints:** [docs/checkpoints.md](docs/checkpoints.md) · **Changes:** [CHANGELOG.md](CHANGELOG.md)
 
-> Reproducible PFN surrogates, priors and amortized acquisitions (PFNs4BO-style PFN, TabPFN-v2-style surrogate, alpha-PFN), with pinned checkpoints, for reuse as a dependency.
+## What is in it
 
-<p align="center"><img src="reports/figures/main_result.png" width="600" alt="Main result"></p>
-
-**Paper / preprint:** _link_ · **Cite:** [CITATION.cff](CITATION.cff) · **How we work:** [docs/process.md](docs/process.md) · **Results & decisions:** [research_log/](research_log/README.md)
-
-## Status
-
-<!-- Project-level gates. A phase starts only after the previous phase's verdict supports it. -->
-
-| Phase | Question | Verdict | Evidence |
-|---|---|---|---|
-| 0 | Is there a signal worth building a method for? | _pending_ | [log entry](research_log/entries/) |
-| 1 | ... | — | — |
-
-## Claims
-
-<!-- Every claim in the paper/abstract, with the evidence behind it. Filled at stage `final`. -->
-
-| Claim | Snapshot | Notebook / figure |
+| Concern | Module | Contents |
 |---|---|---|
-| _Method X reduces Y by Z (95% CI ...) over N tasks_ | `results/<experiment>/<sweep_id>/` | `notebooks/03_...ipynb` |
+| priors | `pfn_repro.priors` | `bnn.BNNPrior` (PFNs4BO-style BO functions, ECDF-scaled y), `mf.MFPrior` (ifBO's learning-curve prior) |
+| surrogates | `pfn_repro.surrogates` | `PFN` (row tokens, train↔train + test→train attention), `TabPFN` (TabPFN-v2-style cell tokens, feature + item attention, thinking rows) |
+| acquisitions | `pfn_repro.acquisitions` | `standard` (PI, EI, UCB, MES, std from the bar distribution), `alpha_pfn` (amortized Entropy Search: conditioned PFN, targets, trainers) |
+| objectives | `pfn_repro.objectives` | `BarDistribution` (piecewise-uniform output distribution: NLL, mean, quantiles, EI/PI) |
+| checkpoints | `pfn_repro.checkpoints` | registry pinned by sha256: `pfn_smoke`, `pfn_large`, `alpha_conditioned_large`, `alpha_pes_large` |
+
+Every prior trains every surrogate (`training.trainer.PFNTrainer`), and every surrogate has the same call signature.
+
+```python
+from pfn_repro.checkpoints import load, make_prior
+from pfn_repro.acquisitions.standard import arm_scores
+
+pfn, _ = load("pfn_large")                                 # frozen, sha256-verified
+prior = make_prior(x_dim=2, batch_size=4, seed=0)          # BNN prior on the checkpoints' ECDF scale
+x_tr, y_tr, x_te, _ = prior.sample_episode(10, 256)
+logits = pfn(x_tr, y_tr, x_te, n_features=prior.active_dim)
+ei = arm_scores("ei", pfn.bar_dist, logits, y_tr.min(1).values, ucb_quantile=0.95)   # [4, 256]
+```
+
+## Notebooks
+
+| Notebook | What |
+|---|---|
+| `01_*_bnn_prior_1d` | the BNN prior in 1-d: draws, noise, the ECDF scale, how to use it |
+| `02_*_mf_prior_1d` | the multi-fidelity prior: learning curves over a 1-d configuration, how a context is allocated |
+| `03_*_pfn_quality` | `pfn_large` vs `pfn_smoke`: NLL, calibration, ranking, cost; 1-d PPD heatmaps |
+| `04_*_alpha_pfn` | the alpha-PFN pair: training, gates, 1-d behaviour, agreement with standard acquisitions |
 
 ## Quickstart
 
-Runs end to end on a laptop CPU in a few minutes on the bundled sample data:
-
 ```bash
 git clone https://github.com/timruhkopf/pfn-repro.git && cd pfn-repro
-just setup cpu local     # uv sync --extra cpu, pre-commit hooks, .env from envs/local.env.example
-just smoke               # uv run pfn_repro experiment=debug
+just setup cpu local
+just test                    # golden outputs need the large checkpoints, else they skip
+uv run pfn_repro experiment=train_smoke prior=mf surrogate=tabpfn      # a few training steps (scratch)
 ```
 
-Reproduce a reported result:
-
-```bash
-just reproduce results/<experiment>/<sweep_id>   # worktree at the sweep's tag, uv sync --frozen, rerun, compare
-```
-
-Requirements: [uv](https://docs.astral.sh/uv/), [just](https://github.com/casey/just). Always pass a torch extra
-(`cpu` or `cu126`); see [docs/process.md § Environment](docs/process.md#environment).
-
-## Repository map
-
-| Path | What |
-|---|---|
-| `src/pfn_repro/` | the package; one entry point `pfn_repro` (Hydra), configs ship inside it |
-| `src/pfn_repro/configs/experiment/` | one file per research question (config only) |
-| `research_log/` | lab book: entries with decisions, append-only track record, design decisions (backlog: GitHub issues) |
-| `results/` | committed snapshots of finished sweeps; notebooks and figures read only these |
-| `notebooks/` | executed analyses, outputs committed |
-| `references.md` / `.bib` | annotated literature, keyed to BibTeX |
+The large checkpoints are not in git; see [docs/checkpoints.md](docs/checkpoints.md).
 
 ## Citation
 
 ```bibtex
-@misc{ruhkopf2026pfn_repro,
-  title  = {...},
-  author = {...},
+@misc{ruhkopf2026pfnrepro,
+  title  = {pfn-repro: reproducible PFN surrogates, priors and amortized acquisitions},
+  author = {Ruhkopf, Tim},
   year   = {2026},
   url    = {https://github.com/timruhkopf/pfn-repro}
 }
 ```
 
-## License and acknowledgements
-
-MIT, see [LICENSE](LICENSE). Datasets are subject to their own licenses (`data/README.md`).
-Funding, compute resources, and code this project builds on.
+Builds on PFNs4BO (Müller et al. 2023), ifBO (Rakotoarison et al. 2024), TabPFN v2 (Hollmann et al.
+2025) and alpha-PFN (Rakotoarison et al. 2026). MIT, see [LICENSE](LICENSE).
