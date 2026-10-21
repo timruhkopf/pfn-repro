@@ -2,6 +2,7 @@
 # Recipes are thin wrappers: `just sweep ...` == `python -m pfn_repro.tracking.cli sweep ...`.
 set dotenv-load
 set positional-arguments
+set shell := ["bash", "-cu"]  # recipes use bash features (printf %q); sh may be dash
 import? 'project.just'
 
 extra := env("PFN_REPRO_TORCH_EXTRA", "cpu")
@@ -153,7 +154,7 @@ remote *args:
 
 # what is running on the remote (verify a launch before relaunching)
 remote-ps:
-    ssh {{remote_host}} 'ps -eo pid,etime,args | grep -E "[t]racking.cli|pfn_repro.main" || echo "nothing running"'
+    ssh {{remote_host}} 'ps -eo pid,etime,args | grep -E "[t]racking[.]cli|pfn_repro[.]main" | grep -v "grep -E" || echo "nothing running"'
 
 # --- MLflow viewer ------------------------------------------------------------------------------
 

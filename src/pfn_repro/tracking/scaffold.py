@@ -3,6 +3,7 @@
 import datetime as dt
 import json
 import re
+import uuid
 from pathlib import Path
 
 from ..utils.env import PACKAGE
@@ -39,7 +40,7 @@ summarize(snap.runs, "<metric>")"""
 
 
 def _cell(kind: str, source: str) -> dict:
-    cell = {"cell_type": kind, "metadata": {}, "source": source.splitlines(keepends=True)}
+    cell = {"cell_type": kind, "id": uuid.uuid4().hex[:8], "metadata": {}, "source": source.splitlines(keepends=True)}
     return cell | ({"outputs": [], "execution_count": None} if kind == "code" else {})
 
 
