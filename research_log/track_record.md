@@ -47,3 +47,11 @@ with deliverables and open questions.
   ≈ 0.20 s/step; 192/8 ≈ 0.39 s/step; 256/8 runs out of memory. Chosen: 192/8, 32 thinking rows. Cost:
   one night, ~11.5 GPU-h, with the cosine schedule fitted to the 07:30 deadline.
 - Template v0.4.0 adds `--start-at` (plan and freeze now, start later), used for this launch.
+
+### 2026-10-21 20:12 — TabPFN pilot start check: not verifiable (ulysses unreachable)
+
+Scheduled check of `runs/tabpfn_bnn/pilot_20261021-142330` (planned start 20:00, detached `--start-at`).
+`just remote-ps` and ssh both time out during the banner exchange. The jump host
+`ssh2.ai.uni-hannover.de:22` has refused connections from the laptop since about 18:40, while other
+internet works, so I couldn't see whether the run started. The run doesn't need a connection (it was
+planned and frozen at 14:23). Not relaunched. Next: check queue.log and 0/stdout.log once the gateway answers.
