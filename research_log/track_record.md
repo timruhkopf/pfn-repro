@@ -20,3 +20,18 @@ with deliverables and open questions.
   pfn-acqpolicy/models and verified there.
 - Next: `eval_pfn_large` and `eval_alpha_large` as sanity sweeps on ulysses (detached, CPU), then compare
   with the original eval_pfn_large artifacts.
+
+### 2026-10-21 15:15 — reproduction checks done (52bf85a)
+
+- eval_pfn_large: the laptop run (the original's machine and torch) is **bit-identical** to pfn-acqpolicy's
+  run c091bb58 (30,720 per-function rows). ulysses differs at the near-tie level (summary ≤ 5e-5). Log
+  entry §1, notebook 03.
+- eval_alpha_large: all 24 gate criteria pass with the original values; agreement and gains match notebook 09.
+  Log entry §1, notebook 04.
+- Notebooks 01 (BNN prior) and 02 (MF prior) are written and executed. I checked every observation
+  against the figures and corrected two that the figures contradicted (01: "no constant functions";
+  02: "monotone curves").
+- Found and fixed along the way:
+  - template v0.3.2/v0.3.3: pre-commit 4.6.1 needs git ≥ 2.31; just ran recipes with dash
+    (''); remote-ps matched itself; notebook cell ids; default_stages;
+  - here: the density tables were too large to commit (float16, coarser grid).

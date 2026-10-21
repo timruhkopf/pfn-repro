@@ -1,0 +1,20 @@
+{
+ "id": "sanity_20261021-135934",
+ "experiment": "eval_pfn_large",
+ "stage": "sanity",
+ "kind": "grid",
+ "command": "just sweep detached sanity experiment=eval_pfn_large",
+ "overrides": [
+  "experiment=eval_pfn_large"
+ ],
+ "backend": "detached",
+ "commit": "52bf85a8836f277c768d59b2c7fcf134fce1c809",
+ "branch": "HEAD",
+ "tag": "sweep/eval_pfn_large/sanity_20261021-135934",
+ "allow_dirty": false,
+ "dirty_paths": [],
+ "editable_dependencies": {},
+ "host": "ulysses",
+ "created": "2026-10-21T13:59:34",
+ "n_members": 1
+}

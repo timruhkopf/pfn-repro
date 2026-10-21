@@ -1,0 +1,5 @@
+# @package _global_
+# The registered alpha-PFN pair: histories, gates, 1-d panels, agreement.
+defaults:
+  - /prior: bnn
+  - override /task: eval_alpha

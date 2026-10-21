@@ -1,0 +1,28 @@
+prior.bias_std: 0.1
+prior.depth_range: '[8, 32]'
+prior.frac_relevant_features: 0.7
+prior.log_amp_range: '[8.0, 20.0]'
+prior.name: bnn
+prior.output_noise_std_range: '[0.0004, 0.0013]'
+prior.preactivation_noise_std_range: '[0.0003, 0.0014]'
+prior.sparseness: 0.145
+prior.width_range: '[32, 128]'
+seed: 0
+task.agreement.context_multiples: '[2, 6, 12]'
+task.agreement.dims: '[2, 4, 6]'
+task.agreement.n_candidates: 1024
+task.agreement.n_functions: 32
+task.agreement.seed: 9100
+task.alpha: alpha_pes_large
+task.base: pfn_large
+task.conditioned: alpha_conditioned_large
+task.gate_dims: '[1, 2, 4, 6]'
+task.name: eval_alpha
+task.panels.contexts: '[4, 10]'
+task.panels.density_x: 120
+task.panels.max_bins: 200
+task.panels.n_functions: 3
+task.panels.n_grid: 400
+task.panels.seed: 9001
+task.threads: 8
+task.val_every: 5000

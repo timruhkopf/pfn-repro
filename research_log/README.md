@@ -5,3 +5,5 @@ Session diary: [track_record.md](track_record.md) · backlog: GitHub issues labe
 
 | Entry | Experiment | Decisions |
 |---|---|---|
+| [2026-10-21_eval-alpha-large](entries/2026-10-21_eval-alpha-large.md) | `eval_alpha_large` | — |
+| [2026-10-21_eval-pfn-large](entries/2026-10-21_eval-pfn-large.md) | `eval_pfn_large` | — |

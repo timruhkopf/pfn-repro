@@ -1,0 +1,31 @@
+prior.bias_std: 0.1
+prior.depth_range: '[8, 32]'
+prior.frac_relevant_features: 0.7
+prior.log_amp_range: '[8.0, 20.0]'
+prior.name: bnn
+prior.output_noise_std_range: '[0.0004, 0.0013]'
+prior.preactivation_noise_std_range: '[0.0003, 0.0014]'
+prior.sparseness: 0.145
+prior.width_range: '[32, 128]'
+seed: 0
+task.chunk: 32
+task.context_sizes: '[1, 2, 3, 5, 10, 20, 30, 50, 75, 100]'
+task.data_seed: 555000
+task.dims: '[1, 2, 3, 4, 5, 6]'
+task.models: '["pfn_large", "pfn_smoke"]'
+task.n_boot: 1000
+task.n_functions: 256
+task.n_test: 200
+task.name: eval_pfn
+task.slice.contexts: '[3, 8, 20, 50]'
+task.slice.density_x: 120
+task.slice.max_bins: 200
+task.slice.n_candidates: 256
+task.slice.n_functions: 3
+task.slice.n_grid: 400
+task.slice.seed: 4242
+task.threads: 8
+task.timing.batch: 16
+task.timing.n_test: 200
+task.timing.reps: 7
+task.val_every.pfn_large: 5000
