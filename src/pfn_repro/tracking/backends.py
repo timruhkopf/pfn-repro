@@ -24,8 +24,12 @@ def launch(
     workers: int = 1,
     preset: str = "gpu_small",
     max_parallel: int = 16,
+    start_at: str | None = None,
 ) -> None:
-    """Grid sweeps run `members` (default: all not DONE); optuna sweeps start `workers` workers."""
+    """Grid sweeps run `members` (default: all not DONE); optuna sweeps start `workers` workers.
+    start_at ('HH:MM' or ISO, detached only): plan and freeze now, start then."""
+    if start_at and backend != "detached":
+        raise ValueError("--start-at needs the detached backend (slurm: use sbatch --begin in the preset)")
     ensure_code(sweep_dir)  # here, once, not in every array element
     optuna = (sweep_dir / "study.journal").exists()
     if backend == "local":
@@ -36,15 +40,17 @@ def launch(
         else:
             print(execute(sweep_dir, members))
     elif backend == "detached":
-        _detached(sweep_dir, members, optuna)
+        _detached(sweep_dir, members, optuna, start_at)
     elif backend == "slurm":
         _slurm(sweep_dir, members, optuna, workers, preset, max_parallel)
     else:
         raise ValueError(f"backend must be one of {BACKENDS}")
 
 
-def _detached(sweep_dir: Path, members: Sequence[int] | None, optuna: bool) -> None:
+def _detached(sweep_dir: Path, members: Sequence[int] | None, optuna: bool, start_at: str | None = None) -> None:
     args = ["optuna-worker", str(sweep_dir)] if optuna else ["execute", str(sweep_dir)]
+    if start_at and not optuna:
+        args += ["--start-at", start_at]
     if members and not optuna:
         args += ["--members", *map(str, members)]
     log = sweep_dir / "queue.log"

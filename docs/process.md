@@ -296,7 +296,7 @@ or `MISSING` (never started).
 | Backend | Executes members | Notes |
 |---|---|---|
 | `local` | one after another, in the foreground | Hydra `-m` works too, for quick scratch sweeps |
-| `detached` | one after another, in a new session that survives logout | for an ssh box; log in `<dir>/queue.log`, pid in `queue.pid` |
+| `detached` | one after another, in a new session that survives logout | for an ssh box; log in `<dir>/queue.log`, pid in `queue.pid`; `--start-at 20:00` plans and freezes now, starts then |
 | `slurm` | one array element per member (`--preset gpu_small`, `--max-parallel 16`) | [slurm] `--signal=B:USR1@120 --requeue`: members checkpoint (if they can) and requeue |
 
 **Members run from frozen code.** Planning a sweep creates `<sweep dir>/.code`, a git worktree at the sweep's

@@ -92,3 +92,14 @@ def test_cli_run_local(runs_root: Path, root: Path) -> None:
     (d,) = (runs_root / "debug").iterdir()
     assert sweep.counts(d) == {"DONE": 1}, out
     assert json.loads((d / "sweep.json").read_text())["command"].startswith("just run local sanity")
+
+
+def test_start_time() -> None:
+    import datetime as dt
+
+    now = dt.datetime.now()
+    soon = sweep.start_time(f"{(now + dt.timedelta(minutes=5)):%H:%M}")
+    assert dt.timedelta(minutes=3) < soon - now < dt.timedelta(minutes=6)  # later today
+    earlier = sweep.start_time(f"{(now - dt.timedelta(minutes=5)):%H:%M}")
+    assert dt.timedelta(hours=23) < earlier - now < dt.timedelta(hours=24)  # already past: tomorrow
+    assert sweep.start_time("2030-01-02T03:04") == dt.datetime(2030, 1, 2, 3, 4)

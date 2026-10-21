@@ -20,6 +20,7 @@ import signal
 import socket
 import subprocess
 import sys
+import time
 from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
@@ -190,6 +191,24 @@ def run_member(
             return proc.wait()
         finally:
             signal.signal(signal.SIGUSR1, previous)
+
+
+def start_time(when: str) -> dt.datetime:
+    """'HH:MM' (today, or tomorrow if already past) or an ISO date-time, in local time."""
+    if len(when) <= 5 and ":" in when:
+        h, m = (int(x) for x in when.split(":"))
+        now = dt.datetime.now()
+        start = now.replace(hour=h, minute=m, second=0, microsecond=0)
+        return start if start > now else start + dt.timedelta(days=1)
+    return dt.datetime.fromisoformat(when)
+
+
+def wait_until(when: str | None) -> None:
+    if not when:
+        return
+    start = start_time(when)
+    print(f"{dt.datetime.now():%F %T} waiting until {start:%F %T}", flush=True)
+    time.sleep(max(0.0, (start - dt.datetime.now()).total_seconds()))
 
 
 def execute(

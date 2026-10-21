@@ -37,7 +37,7 @@ def cmd_run(a: argparse.Namespace) -> None:
         single=a.cmd == "run",
     )
     print(f"planned {d} ({len(sweep.jobs(d))} members)")
-    launch(d, a.backend, preset=a.preset, max_parallel=a.max_parallel)
+    launch(d, a.backend, preset=a.preset, max_parallel=a.max_parallel, start_at=a.start_at)
 
 
 def cmd_status(a: argparse.Namespace) -> None:
@@ -62,6 +62,7 @@ def cmd_resume(a: argparse.Namespace) -> None:
 
 
 def cmd_execute(a: argparse.Namespace) -> None:
+    sweep.wait_until(a.start_at)
     print(sweep.execute(a.sweep_dir, a.members or None), flush=True)
 
 
@@ -151,6 +152,7 @@ def parser() -> argparse.ArgumentParser:
     def launch_opts(s: argparse.ArgumentParser) -> None:
         s.add_argument("--preset", default="gpu_small", help="SLURM preset in scripts/slurm/presets/")
         s.add_argument("--max-parallel", type=int, default=16, help="SLURM array throttle")
+        s.add_argument("--start-at", help="detached: plan and freeze now, start at 'HH:MM' or an ISO time")
 
     for name, help_ in (("run", "one tracked run"), ("sweep", "a tracked sweep (Hydra sweep syntax)")):
         s = sub.add_parser(name, help=help_)
@@ -175,6 +177,7 @@ def parser() -> argparse.ArgumentParser:
     s = sub.add_parser("execute", help="run members that are not DONE here, one after another")
     s.add_argument("sweep_dir", type=Path)
     s.add_argument("--members", type=int, nargs="*")
+    s.add_argument("--start-at", help="'HH:MM' or ISO local time: wait, then execute")
     s.set_defaults(func=cmd_execute)
 
     s = sub.add_parser("member", help="run one member (used by SLURM array elements)")
