@@ -7,7 +7,8 @@ count, passed to the surrogate as `n_features`), `B`, `d` and `generator` (a `to
 whose state the trainer checkpoints).
 
 - `bnn.BNNPrior`: BO functions from random deep tanh networks, y on the training ECDF scale (PFNs4BO).
-- `mf.MFPrior`: learning curves over (configuration, fidelity) (ifBO's FT-PFN prior).
+- `mf.MFPrior`: learning curves over (configuration, fidelity) (ifBO's FT-PFN prior); `build_prior` returns
+  `mf.fast.FastMFPrior`, which gives the same episodes faster.
 """
 
 from typing import Any
@@ -38,9 +39,9 @@ def build_prior(
             **params,
         )
     if name == "mf":
-        from .mf import MFPrior
+        from .mf.fast import FastMFPrior  # MFPrior's episodes, batched (priors/mf/fast.py)
 
-        return MFPrior(
+        return FastMFPrior(
             batch_size=batch_size, x_dim=x_dim, variable_dim_min=variable_dim_min, seed=seed, device=device, **params
         )
     raise ValueError(f"unknown prior {name!r}")

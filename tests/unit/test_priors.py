@@ -51,3 +51,31 @@ def test_allocation_counts() -> None:
     assert cutoff.sum() == 80 and epochs.sum() == 200
     assert bool((cutoff <= epochs).all())
     assert len(ordering) == 200
+
+
+@pytest.mark.parametrize(("n_levels", "curve_id"), [(10, False), (None, True)])
+def test_fast_mf_prior_gives_the_same_episodes(n_levels: int | None, curve_id: bool) -> None:
+    """FastMFPrior batches MFPrior's deterministic work; every episode stays exactly the same."""
+    from pfn_repro.priors.mf import MFPrior
+    from pfn_repro.priors.mf.fast import FastMFPrior
+
+    kw = dict(batch_size=4, x_dim=2, variable_dim_min=1, n_levels=n_levels, include_curve_id=curve_id, seed=3)
+    slow, fast = MFPrior(**kw), FastMFPrior(**kw)
+    for n_train in (1, 6, 40):
+        slow.reset()
+        fast.reset()
+        for u, v in zip(slow.sample_episode(n_train, 30), fast.sample_episode(n_train, 30), strict=True):
+            assert torch.equal(u, v)
+
+
+def test_prefetch_batches_depend_only_on_seed_and_step() -> None:
+    """A worker's batch for a step does not depend on what the worker made before."""
+    from pfn_repro.training import prefetch
+
+    prefetch._init_worker(dict(name="mf", batch_size=2, x_dim=2, seed=0, variable_dim_min=1))
+    a = prefetch.make_batch(0, 5, 7, 4)
+    for step in (1, 2, 3):
+        prefetch.make_batch(0, step, 9, 4)
+    b = prefetch.make_batch(0, 5, 7, 4)
+    for u, v in zip(a, b, strict=True):
+        assert torch.equal(u, v)

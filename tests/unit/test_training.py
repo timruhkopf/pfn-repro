@@ -65,3 +65,32 @@ def test_every_prior_trains_every_surrogate(prior: str, surrogate: str, tmp_path
         prior=p, model=model, seed=0, n_steps=3, min_train=2, max_train=5, n_test=4, warmup_steps=1, log_every=1
     ).run()["history"]
     assert all(v == v for v in history["nll/train"])  # finite
+
+
+@pytest.mark.slow
+def test_prefetch_does_not_depend_on_the_number_of_workers() -> None:
+    """Batches made ahead in worker processes are a function of (seed, step): 1 and 3 workers train the same."""
+    from pfn_repro.checkpoints import load_ecdf  # noqa: F401  (the BNN prior's asset; workers load it too)
+    from pfn_repro.training.prefetch import PrefetchTrainer
+
+    def train(workers: int):
+        torch.manual_seed(0)
+        prior = build_prior("bnn", batch_size=2, x_dim=2, seed=0)
+        model = PFN(max_x_dim=2, d_model=16, n_heads=2, n_layers=1, d_ff=32, n_bins=16)
+        PrefetchTrainer(
+            prior=prior,
+            model=model,
+            seed=0,
+            n_steps=6,
+            min_train=2,
+            max_train=5,
+            n_test=4,
+            warmup_steps=1,
+            log_every=1,
+            prior_kwargs=dict(name="bnn", batch_size=2, x_dim=2, seed=0),
+            workers=workers,
+        ).run()
+        return model
+
+    for p, q in zip(train(1).parameters(), train(3).parameters(), strict=True):
+        torch.testing.assert_close(p, q)

@@ -14,6 +14,7 @@ from omegaconf import DictConfig
 
 from ..priors import build_prior
 from ..tracking.sink import Run
+from ..training.prefetch import PrefetchTrainer
 from ..training.trainer import PFNTrainer
 from ..utils.seeding import seed_everything
 from .common import device_of, episode_validation, log_to, to_dict
@@ -41,7 +42,14 @@ def train_pfn(cfg: DictConfig, run: Run) -> float:
     run.log_summary(n_params=sum(p.numel() for p in model.parameters()))
 
     ckpt = Path(run.dir) / "checkpoint.pt"
-    trainer = PFNTrainer(
+    workers = t.get("prefetch_workers", 0)
+    prefetch: dict = {}
+    if workers:  # batches made ahead in worker processes (training/prefetch.py)
+        prior_kwargs = dict(
+            batch_size=t.batch_size, x_dim=t.x_dim, seed=cfg.seed, variable_dim_min=t.variable_dim_min, **prior_cfg
+        )
+        prefetch = dict(prior_kwargs=prior_kwargs, workers=workers)
+    trainer = (PrefetchTrainer if workers else PFNTrainer)(
         prior=prior,
         model=model,
         seed=cfg.seed,
@@ -57,6 +65,7 @@ def train_pfn(cfg: DictConfig, run: Run) -> float:
             "git_commit": run.read().get("tags", {}).get("git_commit"),
         },
         **to_dict(t.trainer),
+        **prefetch,
     )
     history = trainer.run()["history"]
     last = {k: v[-1] for k, v in history.items() if k != "step" and v}
