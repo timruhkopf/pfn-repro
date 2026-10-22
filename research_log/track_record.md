@@ -73,3 +73,12 @@ laptop; `sha256sum` identical on both (d4141d53…). Provenance read from the ch
 git_commit 6567285) and MLflow (`just mlflow-sync`; run 315b763c…). Golden outputs computed once and
 pinned; `tests/unit/test_checkpoints.py` 8 passed. Snapshot `results/tabpfn_bnn/pilot_20261021-142330`.
 v0.2.0. Evaluation against pfn_large not run yet.
+
+### 2026-10-22 16:05 — Task pfn_mf (attempt 1): mandate; TabPFN pilot final numbers
+
+Mandate (`research_log/tasks/2026-10-22_pfn_mf.md`, Tim 2026-10-21 14:20): profile and optimize the MF
+prior's runtime, set up experiment `pfn_mf` (pfn_large-sized PFN on `prior=mf`), write its notebook
+description before the run, launch a detached pilot on ulysses at 20:00 with deadline 2026-10-23T07:30.
+Allowed launches: scratch probes on ulysses and that one sweep. Step 0 (TabPFN pilot) was done earlier
+today (entries 09:50, 11:05). Final validation NLL at n = 20, d = 1..6 (snapshot
+`results/tabpfn_bnn/pilot_20261021-142330`, runs.parquet): −3.39, −2.66, −1.78, −1.47, −1.37, −1.08.
