@@ -3,3 +3,4 @@ name: mf
 n_levels: 50            # fidelity levels per curve; null: FidelityPrior draws 1..1000 per batch
 minimize: true          # y = 1 - performance
 include_curve_id: false # ifBO's curve-id token as an extra input column
+exact_stream: true      # false: same distribution, fewer torch draws (priors/mf/fast.py); not MFPrior's stream

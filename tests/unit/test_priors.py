@@ -51,3 +51,52 @@ def test_allocation_counts() -> None:
     assert cutoff.sum() == 80 and epochs.sum() == 200
     assert bool((cutoff <= epochs).all())
     assert len(ordering) == 200
+
+
+@pytest.mark.parametrize(("n_levels", "curve_id"), [(10, False), (None, True)])
+def test_fast_mf_prior_gives_the_same_episodes(n_levels: int | None, curve_id: bool) -> None:
+    """FastMFPrior batches MFPrior's deterministic work; every episode stays exactly the same."""
+    from pfn_repro.priors.mf import MFPrior
+    from pfn_repro.priors.mf.fast import FastMFPrior
+
+    kw = dict(batch_size=4, x_dim=2, variable_dim_min=1, n_levels=n_levels, include_curve_id=curve_id, seed=3)
+    slow, fast = MFPrior(**kw), FastMFPrior(**kw)
+    for n_train in (1, 6, 40):
+        slow.reset()
+        fast.reset()
+        for u, v in zip(slow.sample_episode(n_train, 30), fast.sample_episode(n_train, 30), strict=True):
+            assert torch.equal(u, v)
+
+
+def test_prefetch_batches_depend_only_on_seed_and_step() -> None:
+    """A worker's batch for a step does not depend on what the worker made before."""
+    from pfn_repro.training import prefetch
+
+    prefetch._init_worker(dict(name="mf", batch_size=2, x_dim=2, seed=0, variable_dim_min=1))
+    a = prefetch.make_batch(0, 5, 7, 4)
+    for step in (1, 2, 3):
+        prefetch.make_batch(0, step, 9, 4)
+    b = prefetch.make_batch(0, 5, 7, 4)
+    for u, v in zip(a, b, strict=True):
+        assert torch.equal(u, v)
+
+
+def test_fast_mf_prior_off_the_exact_stream_keeps_the_distribution() -> None:
+    """exact_stream=False changes only torch's stream (the latent BNN): inputs identical, y distribution equal."""
+    from scipy.stats import ks_2samp
+
+    from pfn_repro.priors.mf.fast import FastMFPrior
+
+    kw = dict(batch_size=8, x_dim=2, variable_dim_min=1, n_levels=10, seed=5)
+    exact, lean = FastMFPrior(**kw), FastMFPrior(**kw, exact_stream=False)
+    ya, yb = [], []
+    for n_train in [1, 5, 20, 40] * 6:
+        exact.reset()
+        lean.reset()
+        a, b = exact.sample_episode(n_train, 30), lean.sample_episode(n_train, 30)
+        assert torch.equal(a[0], b[0]) and torch.equal(a[2], b[2])  # configs and fidelities: numpy draws
+        ya.append(torch.cat([a[1], a[3]], 1).mean(1))  # per-task mean y (tokens within a task are dependent)
+        yb.append(torch.cat([b[1], b[3]], 1).mean(1))
+    ya, yb = torch.cat(ya).numpy(), torch.cat(yb).numpy()
+    assert not np.array_equal(ya, yb)
+    assert ks_2samp(ya, yb).pvalue > 1e-3

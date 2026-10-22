@@ -73,3 +73,26 @@ laptop; `sha256sum` identical on both (d4141d53…). Provenance read from the ch
 git_commit 6567285) and MLflow (`just mlflow-sync`; run 315b763c…). Golden outputs computed once and
 pinned; `tests/unit/test_checkpoints.py` 8 passed. Snapshot `results/tabpfn_bnn/pilot_20261021-142330`.
 v0.2.0. Evaluation against pfn_large not run yet.
+
+### 2026-10-22 16:05 — Task pfn_mf (attempt 1): mandate; TabPFN pilot final numbers
+
+Mandate (`research_log/tasks/2026-10-22_pfn_mf.md`, Tim 2026-10-21 14:20): profile and optimize the MF
+prior's runtime, set up experiment `pfn_mf` (pfn_large-sized PFN on `prior=mf`), write its notebook
+description before the run, launch a detached pilot on ulysses at 20:00 with deadline 2026-10-23T07:30.
+Allowed launches: scratch probes on ulysses and that one sweep. Step 0 (TabPFN pilot) was done earlier
+today (entries 09:50, 11:05). Final validation NLL at n = 20, d = 1..6 (snapshot
+`results/tabpfn_bnn/pilot_20261021-142330`, runs.parquet): −3.39, −2.66, −1.78, −1.47, −1.37, −1.08.
+
+### 2026-10-22 16:35 — Task pfn_mf: MF prior optimized, pfn_mf pilot planned for 20:00 (2de39f8)
+
+- Optimized (task file steps 1–2; numbers from scratch probes on ulysses): `MFPrior` 1.28 s per batch on one
+  core against a 45 ms bf16 GPU step. `FastMFPrior` (priors/mf/fast.py) 0.39 s with bit-identical episodes
+  (test); `exact_stream=false` 0.24 s on the laptop with the same distribution (test); `PrefetchTrainer`
+  (training/prefetch.py) with 8 workers. Real-config probe: 55 ms/step (exact stream: 67 ms/step), so the
+  prior adds ~10 ms per step. Lint clean, `just test` 93 passed / 1 skipped.
+- Experiment `pfn_mf` (issue #4, branch `exp/4-pfn-mf`, draft PR #5); notebook 06 description and GO rule
+  written before the run; log entry §1.
+- Launched `just remote sweep detached pilot --start-at 20:00 experiment=pfn_mf
+  task.trainer.deadline=2026-10-23T07:30` → `runs/pfn_mf/pilot_20261022-163253`. Verified: launcher pid
+  1261256 alive, queue.log waiting until 20:00, frozen code 2de39f8. The start itself is unverified.
+- Open: check at 20:00+ that member 0 started (queue.log, 0/stdout.log "ms/step: n_steps set to").
