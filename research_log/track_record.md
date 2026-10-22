@@ -55,3 +55,11 @@ Scheduled check of `runs/tabpfn_bnn/pilot_20261021-142330` (planned start 20:00,
 `ssh2.ai.uni-hannover.de:22` has refused connections from the laptop since about 18:40, while other
 internet works, so I couldn't see whether the run started. The run doesn't need a connection (it was
 planned and frozen at 14:23). Not relaunched. Next: check queue.log and 0/stdout.log once the gateway answers.
+
+### 2026-10-22 09:50 — TabPFN pilot: started and finished (69003e1)
+
+ulysses reachable again at 09:48. `runs/tabpfn_bnn/pilot_20261021-142330/queue.log` (read over ssh):
+"waiting until 2026-10-21 20:00:00", then "member 0: DONE (rc=0)" at 2026-10-22 06:36:34, before the
+07:30 deadline. `0/stdout.log`: "372 ms/step: n_steps set to 100115"; last step 100114 (38191 s),
+"saved checkpoint to .../0/checkpoint.pt". `just remote-ps`: nothing running; GPU idle. This corrects the
+20:12 entry (not verifiable then). Not yet pulled or evaluated.
