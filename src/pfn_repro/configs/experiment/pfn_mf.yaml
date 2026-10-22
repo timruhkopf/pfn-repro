@@ -1,0 +1,29 @@
+# @package _global_
+# Regular PFN on the MF prior (ifBO's FT-PFN prior), overnight pilot (issue #4). pfn_large's size and training
+# recipe; inputs [config (1-3 hyperparameters), fidelity], y = 1 - performance. Episodes come from
+# FastMFPrior (bit-identical to MFPrior) made ahead in 10 worker processes: on ulysses (8 cores) a batch
+# costs ~0.39 s on one core and ~60 ms with the workers, against a 45 ms GPU step (task 2026-10-22_pfn_mf).
+# Launch with the deadline: task.trainer.deadline=<ISO> (the cosine schedule is fitted to end by then).
+defaults:
+  - /prior: mf
+  - /surrogate: pfn
+  - override /task: train_pfn
+surrogate: {d_model: 256, n_heads: 8, n_layers: 8, d_ff: 1024, n_bins: 1000}
+task:
+  device: cuda
+  x_dim: 3
+  variable_dim_min: 1
+  prefetch_workers: 10
+  trainer:
+    n_steps: 1500000
+    warmup_steps: 15000
+    log_every: 1000
+    save_every: 20000
+    mixed_precision: true
+    deadline: null
+    fit_to_deadline: true
+    calib_steps: 300
+    deadline_margin: 0.9
+  validation:
+    dims: [1, 2, 3]
+    every_n_steps: 5000
