@@ -8,6 +8,7 @@ defaults:
   - /prior: mf
   - /surrogate: pfn
   - override /task: train_pfn
+prior: {exact_stream: false}
 surrogate: {d_model: 256, n_heads: 8, n_layers: 8, d_ff: 1024, n_bins: 1000}
 task:
   device: cuda

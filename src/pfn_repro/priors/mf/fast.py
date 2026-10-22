@@ -13,6 +13,12 @@ without `nn.Module` overhead, making the same torch/numpy RNG calls in the same 
 default init, which `MLP.reset_parameters` overwrites); `TabulatedLinker` replaces the linker's scipy ppfs by
 lookups, since their argument is a function of the latent ECDF index (one of len(ECDF) + 1 values).
 
+`exact_stream=False` (used by experiment pfn_mf) drops two pieces of work that only advance torch's RNG: the
+throwaway nn.Linear init draws, and the latent BNN's rows of configurations the episode never uses (each
+config's row gets its own i.i.d. noise given the weights, so the used rows' distribution is unchanged). The
+episode distribution is the same and every numpy draw (allocation, configs, fidelities, noise, y0/ymax) is
+identical; only the torch stream, and so the latent BNN's weights and outputs, differ from MFPrior's.
+
 The observation noise is drawn as one standard-normal vector per task and scaled per token: numpy's legacy
 `normal(size=k, scale=s)` is `0 + s * gauss` with gauss read from the same stream, so concatenating the
 per-curve draws gives the same numbers. The curve values could in principle differ from the per-curve path
@@ -29,7 +35,7 @@ from scipy.stats import expon, gamma, norm
 
 from .curves import CurveModels
 from .dims import FidelityPrior
-from .episodes import MFPrior
+from .episodes import N_LATENT, MFPrior
 
 _BASIS = (CurveModels.power_law, CurveModels.exponential, CurveModels.logarithmic, CurveModels.hill)
 _EPS_GRAD = 10**-9
@@ -54,7 +60,7 @@ def mixture(x, y0, yinf, w, alpha, xsat, prec, rpsat):
 class LeanMLP:
     """`BNNPrior.sample_mlp(n_in, n_out)` (bnn.py): the same draws, the same forward, as plain tensors."""
 
-    def __init__(self, n_in: int, n_out: int):
+    def __init__(self, n_in: int, n_out: int, exact_stream: bool = True):
         n_layers = np.random.randint(8, 16)  # noqa: NPY002  (sample_mlp's draws, in its order)
         n_hidden = np.random.randint(36, 150)  # noqa: NPY002
         init_std = np.random.uniform(0.089, 0.193)  # noqa: NPY002
@@ -65,11 +71,11 @@ class LeanMLP:
         self.ws = [torch.empty(o, i) for i, o in zip(dims[:-1], dims[1:], strict=True)]
         self.bs = [torch.empty(o) for o in dims[1:]]
         with torch.no_grad():
-            for _ in range(2):  # nn.Linear.__init__, then MLP.reset_parameters' linear.reset_parameters()
-                for w, b in zip(self.ws, self.bs, strict=True):
-                    bound = 1 / math.sqrt(w.shape[1])
-                    w.uniform_(-bound, bound)  # kaiming_uniform_(a=sqrt(5)): the same bound
-                    b.uniform_(-bound, bound)
+            # nn.Linear.__init__'s default init, then MLP.reset_parameters' linear.reset_parameters(): both are
+            # overwritten below, but they advance torch's RNG. They are one contiguous block of uniform draws
+            # (one per element, whatever the bounds), so one call consumes the same stream.
+            if exact_stream:
+                torch.empty(2 * sum(w.numel() + b.numel() for w, b in zip(self.ws, self.bs, strict=True))).uniform_()
             for w, b in zip(self.ws, self.bs, strict=True):
                 w.normal_(0, init_std)
                 b.normal_(0, init_std)
@@ -122,12 +128,15 @@ class TabulatedLinker:
 class FastMFPrior(MFPrior):
     _linkers: dict[tuple[int, int], TabulatedLinker] = {}
 
+    def __init__(self, *args, exact_stream: bool = True, **kwargs):
+        self.exact_stream = exact_stream
+        super().__init__(*args, **kwargs)
+
     def reset(self) -> None:
         """MFPrior.reset with each task's latent BNN drawn as a LeanMLP (the same draws)."""
         lo = self.variable_dim_min or self.x_dim
         self.hp_dim = int(torch.randint(lo, self.x_dim + 1, (1,), generator=self.generator))
         from .bnn import BNNPrior as LatentBNN
-        from .episodes import N_LATENT
         from .task import MultiFidelityTask
 
         LatentBNN.ensure_ecdf_loaded(self.hp_dim, N_LATENT)
@@ -136,7 +145,7 @@ class FastMFPrior(MFPrior):
             if self.hp_dim not in self._tasks:
                 self._tasks[self.hp_dim] = [MultiFidelityTask(self.hp_dim, N_LATENT) for _ in range(self.B)]
             for task in self._tasks[self.hp_dim]:
-                task.model = LeanMLP(self.hp_dim, N_LATENT)  # pyright: ignore[reportAttributeAccessIssue]  (sample_task, lean)
+                task.model = LeanMLP(self.hp_dim, N_LATENT, self.exact_stream)  # pyright: ignore[reportAttributeAccessIssue]  (sample_task, lean)
                 task.sample_y0_ymax()
         n_real = self.hp_dim + 1
         self.active_dim = torch.full((self.B,), n_real, dtype=torch.long, device=self.device)
@@ -167,8 +176,13 @@ class FastMFPrior(MFPrior):
         alloc = AllocationPrior(seq, self.n_levels)
         cutoff, epochs_per_curve, ordering = alloc.sample_abstract_allocation(n_train)
         configs = np.random.uniform(size=(seq, self.hp_dim))  # noqa: NPY002  (as in MFPrior._episode)
-        with torch.no_grad():
-            latent = task.model(torch.from_numpy(configs).float()).numpy()  # LeanMLP or bnn.MLP
+        x = torch.from_numpy(configs).float()
+        if self.exact_stream:
+            latent = task.model(x).numpy()  # LeanMLP or bnn.MLP
+        else:  # only the configurations in the episode (unused rows: zeros, never read)
+            used = np.unique(ordering)
+            latent = np.zeros((seq, N_LATENT), dtype=np.float32)
+            latent[used] = task.model(x[used]).numpy()
         # k-th appearance of each curve in the sequence
         by_curve = np.argsort(ordering, kind="stable")
         first = np.searchsorted(ordering[by_curve], np.arange(seq))
