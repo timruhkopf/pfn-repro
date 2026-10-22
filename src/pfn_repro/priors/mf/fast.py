@@ -8,6 +8,11 @@ global RNGs (allocation, configs, BNN forward, query fidelities, observation noi
 work is done once for all tokens of all tasks: one linker call (all tasks of a hp_dim share the latent
 ECDF) and one evaluation of the curve mixture with per-token parameters.
 
+Two more exact shortcuts: `LeanMLP` samples and evaluates the latent BNN (`bnn.MLP` via `BNNPrior.sample_mlp`)
+without `nn.Module` overhead, making the same torch/numpy RNG calls in the same order (including nn.Linear's
+default init, which `MLP.reset_parameters` overwrites); `TabulatedLinker` replaces the linker's scipy ppfs by
+lookups, since their argument is a function of the latent ECDF index (one of len(ECDF) + 1 values).
+
 The observation noise is drawn as one standard-normal vector per task and scaled per token: numpy's legacy
 `normal(size=k, scale=s)` is `0 + s * gauss` with gauss read from the same stream, so concatenating the
 per-curve draws gives the same numbers. The curve values could in principle differ from the per-curve path
@@ -15,10 +20,15 @@ in the last float64 bits (ufuncs on arrays vs scalars, a 4-term sum instead of `
 float32 they are identical in every case tested (tests/unit/test_priors.py asserts exact equality).
 """
 
+import math
+
 import numpy as np
 import torch
+import torch.nn.functional as F
+from scipy.stats import expon, gamma, norm
 
 from .curves import CurveModels
+from .dims import FidelityPrior
 from .episodes import MFPrior
 
 _BASIS = (CurveModels.power_law, CurveModels.exponential, CurveModels.logarithmic, CurveModels.hill)
@@ -41,7 +51,104 @@ def mixture(x, y0, yinf, w, alpha, xsat, prec, rpsat):
     return out
 
 
+class LeanMLP:
+    """`BNNPrior.sample_mlp(n_in, n_out)` (bnn.py): the same draws, the same forward, as plain tensors."""
+
+    def __init__(self, n_in: int, n_out: int):
+        n_layers = np.random.randint(8, 16)  # noqa: NPY002  (sample_mlp's draws, in its order)
+        n_hidden = np.random.randint(36, 150)  # noqa: NPY002
+        init_std = np.random.uniform(0.089, 0.193)  # noqa: NPY002
+        sparseness = 0.145
+        self.pre_noise = np.random.uniform(0.0003, 0.0014)  # noqa: NPY002
+        self.out_noise = np.random.uniform(0.0004, 0.0013)  # noqa: NPY002
+        dims = [n_in] + [n_hidden] * (n_layers - 1) + [n_out]
+        self.ws = [torch.empty(o, i) for i, o in zip(dims[:-1], dims[1:], strict=True)]
+        self.bs = [torch.empty(o) for o in dims[1:]]
+        with torch.no_grad():
+            for _ in range(2):  # nn.Linear.__init__, then MLP.reset_parameters' linear.reset_parameters()
+                for w, b in zip(self.ws, self.bs, strict=True):
+                    bound = 1 / math.sqrt(w.shape[1])
+                    w.uniform_(-bound, bound)  # kaiming_uniform_(a=sqrt(5)): the same bound
+                    b.uniform_(-bound, bound)
+            for w, b in zip(self.ws, self.bs, strict=True):
+                w.normal_(0, init_std)
+                b.normal_(0, init_std)
+            for w in self.ws[1:-1]:
+                w /= (1.0 - sparseness) ** (1 / 2)
+                w *= torch.bernoulli(torch.ones_like(w) * (1.0 - sparseness))
+
+    @torch.no_grad()
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
+        for w, b in zip(self.ws[:-1], self.bs[:-1], strict=True):
+            x = F.linear(x, w, b)
+            x = x + torch.randn_like(x) * self.pre_noise
+            x = torch.tanh(x)
+        x = F.linear(x, self.ws[-1], self.bs[-1])
+        return x + torch.randn_like(x) * self.out_noise
+
+
+class TabulatedLinker:
+    """`VectorizedParameterLinker.__call__` (curves.py) with every ppf looked up by ECDF index."""
+
+    def __init__(self, y_samples: np.ndarray):
+        self.y_samples = y_samples
+        n = len(y_samples)
+        self.eps = 0.5 / n
+        u_shift = (1.0 - 2.0 * self.eps) * (np.arange(n + 1) / n) + self.eps
+        self.gamma1 = gamma.ppf(u_shift, a=1)
+        self.norm = {ls: norm.ppf(u_shift, loc=ls[0], scale=ls[1]) for ls in ((1, 1), (0, 1), (-4, 1), (0.5, 0.5), (-5, 1))}
+        self.expon = expon.ppf(u_shift, scale=1)
+
+    def __call__(self, bnn_outputs, y0, ymax):
+        i = np.searchsorted(self.y_samples, bnn_outputs, side="left")
+        u_raw = i / len(self.y_samples)
+        Yinf = (ymax - y0) * u_raw[:, 0] + y0
+        w_raw = self.gamma1[i[:, 1:5]]
+        w = w_raw / w_raw.sum(axis=1, keepdims=True)
+        a1 = np.exp(self.norm[1, 1][i[:, 5]])
+        a2 = np.exp(self.norm[0, 1][i[:, 6]])
+        a3 = 1.0 + np.exp(self.norm[-4, 1][i[:, 7]])
+        a4 = np.exp(self.norm[0.5, 0.5][i[:, 8]])
+        alpha = np.stack([a1, a2, a3, a4], axis=1)
+        Xsat_max = 10 ** self.norm[0, 1][i[:, 9]]
+        Xsat_rel = self.gamma1[i[:, 10:14]]
+        Xsat = (Xsat_max[:, np.newaxis] * Xsat_rel) / np.max(Xsat_rel, axis=1, keepdims=True)
+        PREC = 1.0 / (10 ** (-3.0 + 3.0 * u_raw[:, 14:18]))
+        Rpsat = 1.0 - self.expon[i[:, 18:22]]
+        sigma = np.exp(self.norm[-5, 1][i[:, 22]])
+        return y0, Yinf, w, alpha, Xsat, PREC, Rpsat, sigma
+
+
 class FastMFPrior(MFPrior):
+    _linkers: dict[tuple[int, int], TabulatedLinker] = {}
+
+    def reset(self) -> None:
+        """MFPrior.reset with each task's latent BNN drawn as a LeanMLP (the same draws)."""
+        lo = self.variable_dim_min or self.x_dim
+        self.hp_dim = int(torch.randint(lo, self.x_dim + 1, (1,), generator=self.generator))
+        from .bnn import BNNPrior as LatentBNN
+        from .episodes import N_LATENT
+        from .task import MultiFidelityTask
+
+        LatentBNN.ensure_ecdf_loaded(self.hp_dim, N_LATENT)
+        with self._seeded():
+            self.n_levels = self.fixed_levels or max(2, FidelityPrior().n_levels)
+            if self.hp_dim not in self._tasks:
+                self._tasks[self.hp_dim] = [MultiFidelityTask(self.hp_dim, N_LATENT) for _ in range(self.B)]
+            for task in self._tasks[self.hp_dim]:
+                task.model = LeanMLP(self.hp_dim, N_LATENT)  # pyright: ignore[reportAttributeAccessIssue]  (sample_task, lean)
+                task.sample_y0_ymax()
+        n_real = self.hp_dim + 1
+        self.active_dim = torch.full((self.B,), n_real, dtype=torch.long, device=self.device)
+        self.active_dim_mask = (torch.arange(self.d, device=self.device) < n_real).float().expand(self.B, -1)
+
+    def _linker(self, task) -> TabulatedLinker:
+        y = task.linker.y_samples
+        key = (self.hp_dim, len(y))
+        if key not in self._linkers or self._linkers[key].y_samples is not y:
+            self._linkers[key] = TabulatedLinker(y)
+        return self._linkers[key]
+
     def sample_episode(self, n_train: int, n_test: int):
         """-> x_tr [B, n_train, d], y_tr [B, n_train], x_te [B, n_test, d], y_te [B, n_test]."""
         seq = n_train + n_test
@@ -61,7 +168,7 @@ class FastMFPrior(MFPrior):
         cutoff, epochs_per_curve, ordering = alloc.sample_abstract_allocation(n_train)
         configs = np.random.uniform(size=(seq, self.hp_dim))  # noqa: NPY002  (as in MFPrior._episode)
         with torch.no_grad():
-            latent = task.model(torch.from_numpy(configs).float()).numpy()
+            latent = task.model(torch.from_numpy(configs).float()).numpy()  # LeanMLP or bnn.MLP
         # k-th appearance of each curve in the sequence
         by_curve = np.argsort(ordering, kind="stable")
         first = np.searchsorted(ordering[by_curve], np.arange(seq))
@@ -88,7 +195,7 @@ class FastMFPrior(MFPrior):
         cat = lambda key: np.concatenate([p[key] for p in parts])  # noqa: E731
         rep = lambda key: np.repeat([p[key] for p in parts], seq)  # noqa: E731
         # one linker call: every task of this hp_dim links through the same latent ECDF
-        y0, yinf, w, alpha, xsat, prec, rpsat, sigma = tasks[0].linker(cat("latent"), rep("y0"), rep("ymax"))
+        y0, yinf, w, alpha, xsat, prec, rpsat, sigma = self._linker(tasks[0])(cat("latent"), rep("y0"), rep("ymax"))
         token = cat("ordering") + np.repeat(np.arange(B) * seq, seq)  # row of each token's curve
         y = mixture(cat("fidelity"), y0[token], yinf[token], w[token], alpha[token], xsat[token], prec[token],
                     rpsat[token])
