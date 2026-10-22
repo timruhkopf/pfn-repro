@@ -1,0 +1,41 @@
+prior.bias_std: 0.1
+prior.depth_range: '[8, 32]'
+prior.frac_relevant_features: 0.7
+prior.log_amp_range: '[8.0, 20.0]'
+prior.name: bnn
+prior.output_noise_std_range: '[0.0004, 0.0013]'
+prior.preactivation_noise_std_range: '[0.0003, 0.0014]'
+prior.sparseness: 0.145
+prior.width_range: '[32, 128]'
+seed: 0
+surrogate._target_: pfn_repro.surrogates.tabpfn.TabPFN
+surrogate.d_ff: 768
+surrogate.d_model: 192
+surrogate.n_bins: 1000
+surrogate.n_heads: 8
+surrogate.n_layers: 8
+surrogate.n_thinking_rows: 32
+task.batch_size: 64
+task.device: cuda
+task.name: train_pfn
+task.trainer.calib_steps: 300
+task.trainer.deadline: 2026-10-22T07:30
+task.trainer.deadline_margin: 0.9
+task.trainer.fit_to_deadline: true
+task.trainer.grad_clip: 1.0
+task.trainer.log_every: 1000
+task.trainer.lr: 0.0003
+task.trainer.max_train: 100
+task.trainer.min_train: 1
+task.trainer.mixed_precision: true
+task.trainer.n_steps: 1500000
+task.trainer.n_test: 256
+task.trainer.save_every: 10000
+task.trainer.warmup_steps: 5000
+task.validation.context_sizes: '[5, 20, 50]'
+task.validation.dims: '[1, 2, 3, 4, 5, 6]'
+task.validation.every_n_steps: 5000
+task.validation.n_functions: 64
+task.validation.n_points: 200
+task.variable_dim_min: 1
+task.x_dim: 6

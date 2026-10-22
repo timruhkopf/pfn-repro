@@ -63,3 +63,13 @@ ulysses reachable again at 09:48. `runs/tabpfn_bnn/pilot_20261021-142330/queue.l
 07:30 deadline. `0/stdout.log`: "372 ms/step: n_steps set to 100115"; last step 100114 (38191 s),
 "saved checkpoint to .../0/checkpoint.pt". `just remote-ps`: nothing running; GPU idle. This corrects the
 20:12 entry (not verifiable then). Not yet pulled or evaluated.
+
+### 2026-10-22 11:05 — TabPFN pilot checked and registered as `tabpfn_bnn_pilot`
+
+Checked the run in depth over ssh and after `just pull tabpfn_bnn`: run.json status DONE, restarts 0,
+no NaN/inf in stdout.log, validation NLL flat over the last 10k steps (log §1). One allocator OOM warning
+at 20:00:08, recovered. Copied `0/checkpoint.pt` to `checkpoints/tabpfn_bnn_pilot.pt` on ulysses and the
+laptop; `sha256sum` identical on both (d4141d53…). Provenance read from the checkpoint itself (sweep_id,
+git_commit 6567285) and MLflow (`just mlflow-sync`; run 315b763c…). Golden outputs computed once and
+pinned; `tests/unit/test_checkpoints.py` 8 passed. Snapshot `results/tabpfn_bnn/pilot_20261021-142330`.
+v0.2.0. Evaluation against pfn_large not run yet.

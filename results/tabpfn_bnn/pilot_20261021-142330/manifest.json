@@ -1,0 +1,28 @@
+{
+ "id": "pilot_20261021-142330",
+ "experiment": "tabpfn_bnn",
+ "stage": "pilot",
+ "kind": "grid",
+ "command": "just sweep detached pilot --start-at 20:00 experiment=tabpfn_bnn task.trainer.deadline=2026-10-22T07:30",
+ "overrides": [
+  "experiment=tabpfn_bnn",
+  "task.trainer.deadline=2026-10-22T07:30"
+ ],
+ "backend": "detached",
+ "commit": "6567285e0b98efb6ab7fa7072931043d46009a3b",
+ "branch": "HEAD",
+ "tag": "sweep/tabpfn_bnn/pilot_20261021-142330",
+ "allow_dirty": false,
+ "host": "ulysses",
+ "created": "2026-10-21T14:23:30",
+ "editable_dependencies": {},
+ "status_counts": {
+  "DONE": 1
+ },
+ "first_start": "2026-10-21T20:00:01",
+ "last_end": "2026-10-22T06:36:33",
+ "wall_h": 10.609,
+ "device_h": 0.0,
+ "snapshot_created": "2026-10-22T11:01:17",
+ "sweep_dir": "runs/tabpfn_bnn/pilot_20261021-142330"
+}

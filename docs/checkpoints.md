@@ -9,6 +9,7 @@ A file is loaded only after its sha256 matches.
 | `pfn_large` | pfn | `pfn_large.pt` | 76 MB | pfn-acqpolicy 0b5683e, 1.5M steps (~24.5 h, RTX 3090) | n ≤ 100 |
 | `alpha_conditioned_large` | conditioned | `es_conditioned_large.pt` | 76 MB | pfn-acqpolicy 4d92fd5, 156,963 steps, from pfn_large | n ≤ 100 |
 | `alpha_pes_large` | alpha | `es_alpha_pes_large.pt` | 76 MB | pfn-acqpolicy 4d92fd5, 186,299 steps (PES) | n ≤ 100 |
+| `tabpfn_bnn_pilot` | pfn (TabPFN-v2-style) | `tabpfn_bnn_pilot.pt` | 60 MB | pfn-repro 6567285, sweep `pilot_20261021-142330`, 100,115 steps (~10.6 h, RTX 3090) | n ≤ 100 |
 | `bnn_ecdf_d6` (ECDF) | — | `bnn_ecdf_d6_86acf732c579ed0d.pt` (in the package) | 8 KB | AnytimeAcquisition | every BNN evaluation prior |
 
 All are trained on the BNN prior (`configs/prior/bnn.yaml`, x_dim 6, variable d from 1). y is on the ECDF
@@ -20,8 +21,8 @@ They are not in git (76 MB each).
 
 | Machine | Location |
 |---|---|
-| ulysses | `~/PycharmProjects/pfn-acqpolicy/models/` (where they were trained), copied into `~/PycharmProjects/pfn-repro/checkpoints/` |
-| laptop | `~/PycharmProjects/pfn-acqpolicy/models/`, symlinked from `pfn-repro/checkpoints/` |
+| ulysses | `~/PycharmProjects/pfn-acqpolicy/models/` (where they were trained), copied into `~/PycharmProjects/pfn-repro/checkpoints/`; checkpoints trained in pfn-repro are copied there from their member dir |
+| laptop | `~/PycharmProjects/pfn-acqpolicy/models/`, symlinked from `pfn-repro/checkpoints/`; checkpoints trained here (`tabpfn_bnn_pilot`) are copied into `pfn-repro/checkpoints/` directly |
 
 Point `PFN_REPRO_CKPT_ROOT` at the directory (default: `<repo>/checkpoints`, for a source checkout).
 `pfn_repro.checkpoints.available()` shows which names are present.
