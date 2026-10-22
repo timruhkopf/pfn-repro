@@ -1,6 +1,6 @@
 [project]
 name = "pfn-repro"
-version = "0.1.0"  # bumped by hand at milestones; the code behind a paper is a git tag
+version = "0.2.0"  # bumped by hand at milestones; the code behind a paper is a git tag
 description = "Reproducible PFN surrogates, priors and amortized acquisitions (PFNs4BO-style PFN, TabPFN-v2-style surrogate, alpha-PFN), with pinned checkpoints, for reuse as a dependency."
 readme = "README.md"
 license = "MIT"

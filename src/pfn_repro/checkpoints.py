@@ -122,6 +122,25 @@ REGISTRY: dict[str, Checkpoint] = {
                 "variant": "pes",
             },
         ),
+        Checkpoint(
+            name="tabpfn_bnn_pilot",
+            file="tabpfn_bnn_pilot.pt",
+            sha256="d4141d53007ac0e7a8c83cbacfb8a9308a3662a54d77633b2230e143d26a58b4",
+            kind="pfn",
+            train_n=(1, 100),
+            description="TabPFN-v2-style surrogate (5.0M params: d_model 192, 8 layers, 32 thinking rows, 1000 "
+            "bins), overnight pilot: 100,115 steps x 64 functions, cosine schedule fitted to the deadline",
+            source={
+                "repo": "pfn-repro",
+                "git_commit": "6567285e0b98efb6ab7fa7072931043d46009a3b",
+                "mlflow_run_id": "315b763c6ca040cbb5e911f454fff3dc",
+                "sweep_id": "pilot_20261021-142330",
+                "step": 100114,
+                "experiment": "tabpfn_bnn",
+                "trained_on": "ulysses, 1x RTX 3090, 10.6 h (372 ms/step, bf16)",
+                "stage": "pilot",
+            },
+        ),
     )
 }
 

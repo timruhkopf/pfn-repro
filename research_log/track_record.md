@@ -35,3 +35,41 @@ with deliverables and open questions.
   - template v0.3.2/v0.3.3: pre-commit 4.6.1 needs git ≥ 2.31; just ran recipes with dash
     (''); remote-ps matched itself; notebook cell ids; default_stages;
   - here: the density tables were too large to commit (float16, coarser grid).
+
+### 2026-10-21 14:25 — correction of the two entries above; TabPFN pilot scheduled
+
+- **Correction:** the two entries above carry wrong times (14:30 and 15:15 were written without reading
+  the clock). The reproduction checks were launched at 13:49 (sweep ids `*_134915`, `*_134916`) and
+  finished around 14:10. Their content stands.
+- Mandate (Tim, 14:15): train TabPFN on the BNN prior tonight on ulysses. Issue #1, branch
+  `exp/1-tabpfn-bnn`.
+- Timing probe on ulysses (bf16, batch 64, n_train ≤ 100, 256 test points): d_model 128/6 layers
+  ≈ 0.20 s/step; 192/8 ≈ 0.39 s/step; 256/8 runs out of memory. Chosen: 192/8, 32 thinking rows. Cost:
+  one night, ~11.5 GPU-h, with the cosine schedule fitted to the 07:30 deadline.
+- Template v0.4.0 adds `--start-at` (plan and freeze now, start later), used for this launch.
+
+### 2026-10-21 20:12 — TabPFN pilot start check: not verifiable (ulysses unreachable)
+
+Scheduled check of `runs/tabpfn_bnn/pilot_20261021-142330` (planned start 20:00, detached `--start-at`).
+`just remote-ps` and ssh both time out during the banner exchange. The jump host
+`ssh2.ai.uni-hannover.de:22` has refused connections from the laptop since about 18:40, while other
+internet works, so I couldn't see whether the run started. The run doesn't need a connection (it was
+planned and frozen at 14:23). Not relaunched. Next: check queue.log and 0/stdout.log once the gateway answers.
+
+### 2026-10-22 09:50 — TabPFN pilot: started and finished (69003e1)
+
+ulysses reachable again at 09:48. `runs/tabpfn_bnn/pilot_20261021-142330/queue.log` (read over ssh):
+"waiting until 2026-10-21 20:00:00", then "member 0: DONE (rc=0)" at 2026-10-22 06:36:34, before the
+07:30 deadline. `0/stdout.log`: "372 ms/step: n_steps set to 100115"; last step 100114 (38191 s),
+"saved checkpoint to .../0/checkpoint.pt". `just remote-ps`: nothing running; GPU idle. This corrects the
+20:12 entry (not verifiable then). Not yet pulled or evaluated.
+
+### 2026-10-22 11:05 — TabPFN pilot checked and registered as `tabpfn_bnn_pilot`
+
+Checked the run in depth over ssh and after `just pull tabpfn_bnn`: run.json status DONE, restarts 0,
+no NaN/inf in stdout.log, validation NLL flat over the last 10k steps (log §1). One allocator OOM warning
+at 20:00:08, recovered. Copied `0/checkpoint.pt` to `checkpoints/tabpfn_bnn_pilot.pt` on ulysses and the
+laptop; `sha256sum` identical on both (d4141d53…). Provenance read from the checkpoint itself (sweep_id,
+git_commit 6567285) and MLflow (`just mlflow-sync`; run 315b763c…). Golden outputs computed once and
+pinned; `tests/unit/test_checkpoints.py` 8 passed. Snapshot `results/tabpfn_bnn/pilot_20261021-142330`.
+v0.2.0. Evaluation against pfn_large not run yet.
