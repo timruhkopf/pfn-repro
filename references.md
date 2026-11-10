@@ -21,6 +21,18 @@ Annotated literature for this project. BibTeX for every entry lives in `referenc
 
 <!-- Papers that establish why the question matters. -->
 
+### [brochu2011hedge] Brochu, Hoffman, de Freitas (2011). *Portfolio Allocation for Bayesian Optimization*. UAI 2011. arXiv:1009.5419
+- **Status:** read (entry shared with anytime-acquisition, same key and BibTeX).
+- **Claim:** GP-Hedge: choose among acquisition functions online with a bandit (Hedge) over their past
+  rewards; a portfolio beats each of its members across problems.
+- **Relevance:** motivation. It is the classic non-learned acquisition selector. The learned selector in
+  the problem statement (Stage 1+, anytime-acquisition) chooses from an option library that includes
+  latent-incumbent EI, noisy EI and replication. Telling those options apart needs the latent/noisy split
+  this repo's two-headed PFN provides (issue #3).
+- **Used in:** context for issue #3; the selector itself lives in anytime-acquisition.
+- **Notes:** the UAI proceedings list the authors as Hoffman, Brochu, de Freitas; the arXiv version lists
+  Brochu first. The key follows the arXiv BibTeX.
+
 ## Closest related work
 
 <!-- What the final paper must position itself against. One line per paper on how we differ. -->
