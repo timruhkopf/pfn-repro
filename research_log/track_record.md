@@ -82,3 +82,14 @@ work in anytime-acquisition. Report intermediate results with executed notebooks
 CPU scratch/sanity runs, then scratch timing probes and one detached pilot sweep per experiment on ulysses
 (after `just remote-ps` shows it idle). Branch `exp/3-noisy-bnn-pfn` (worktree `../pfn-repro-noisy`, so the
 `exp/4-pfn-mf` checkout stays untouched).
+
+### 2026-11-10 13:00 — noisy_pfn: code (fbf6bdb), timing probe, pilot launched (118adaa)
+
+- Code committed at fbf6bdb: `NoisyBNNPrior`, `TwoHeadPFN`, `NoisyPFNTrainer`, `train_noisy_pfn`,
+  `eval_noisy_pfn`; 18 new unit tests pass, lint/pyright clean; notebook descriptions 06 / 07 (GO/NO-GO)
+  written before any run. Latent ECDF assets for d = 2, 4, 8 fitted on CPU (seed 12345) and committed.
+- Timing probe on ulysses (scratch, d = 8, batch 64, bf16): 0.23 s/step (400 steps in 91 s); GPU was idle.
+- Launched `just remote sweep detached pilot experiment=noisy_pfn task.x_dim=2,4,8` →
+  `runs/noisy_pfn/pilot_20261110-115759` (40k steps per member, members in sequence, ~2.6 h each).
+  Verified with `just remote-ps`: launcher pid 1728560 and member 0 (d = 2) running, step 0 logged.
+- In parallel: a local `sanity` run (CPU, small model) to test the eval chain and notebook 07 end to end.
