@@ -3,6 +3,19 @@
 Semantic versioning on the public surface: import paths, registry names, golden outputs
 (docs/dependency_guide.md). Sections: Breaking / Added / Fixed.
 
+## Unreleased (issue #3)
+
+### Added
+- `priors.noisy_bnn.NoisyBNNPrior`: the BNN family as a latent signal (own ECDF per d, packaged assets),
+  per-input relevance (d_eff), SNR-relative observation noise (noise-free / homoscedastic /
+  heteroscedastic; Gaussian, Student-t, contaminated, skew-normal), BO-like and replicate contexts,
+  privileged latent and noise-scale targets, inverse-CDF noise for common random numbers.
+- `surrogates.TwoHeadPFN`: the PFN with a latent and a separately trained noisy bar head;
+  `forward` returns the latent logits (drop-in), `forward_both` both.
+- `training.noisy_trainer.NoisyPFNTrainer`, pipelines `train_noisy_pfn` and `eval_noisy_pfn`
+  (calibration, total variance, martingale self-test, identifiability probes).
+- `PFNTrainer.loss` / `train_metrics` hooks (default behaviour unchanged).
+
 ## v0.2.0 (2026-10-22)
 
 ### Added

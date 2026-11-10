@@ -1,0 +1,30 @@
+# Noisy BNN prior (priors/noisy_bnn.py, issue #3): latent BNN (the bnn family, its own noise off) with
+# per-input relevance, plus SNR-relative observation noise. Values: NoisyBNNPrior defaults, written out.
+# Changing anything above `p_weak` changes the latent ECDF (a new asset file is fitted and must be committed).
+name: noisy_bnn
+depth_range: [8, 32]
+width_range: [32, 128]
+log_amp_range: [8.0, 20.0]
+bias_std: 0.1
+sparseness: 0.145
+weak_relevance: 0.05
+p_weak: 0.5
+regime_probs: [0.2, 0.4, 0.4]          # noise-free, homoscedastic, heteroscedastic
+family_probs: [0.6, 0.2, 0.1, 0.1]     # Gaussian, Student-t, contaminated, skew-normal
+log10_snr_range: [0.30103, 2.0]        # SNR = (median f - min f) / robust noise scale, in [2, 100]
+t_df_range: [3.0, 10.0]
+contam_rate_range: [0.01, 0.1]
+contam_range: [-0.5, 1.5]
+skew_alpha_range: [3.0, 10.0]
+hetero_amp_max: 0.5756463              # ln(10) / 4: scale ratio up to 10 across +-2 std of h
+hetero_width: 16
+coupling_range: [0.0, 0.0]             # optional noise-f coupling (off)
+n_ref: 512
+p_bo_context: 0.5
+bo_init_frac: [0.1, 0.3]
+bo_rounds: 6
+p_local: 0.7
+local_scales: [0.01, 0.03, 0.1]
+p_replicates: 0.4
+replicate_frac_max: 0.3
+test_mix: [0.5, 0.4, 0.1]              # uniform, near a context point, exactly at a context point

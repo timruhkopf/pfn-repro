@@ -73,3 +73,12 @@ laptop; `sha256sum` identical on both (d4141d53…). Provenance read from the ch
 git_commit 6567285) and MLflow (`just mlflow-sync`; run 315b763c…). Golden outputs computed once and
 pinned; `tests/unit/test_checkpoints.py` 8 passed. Snapshot `results/tabpfn_bnn/pilot_20261021-142330`.
 v0.2.0. Evaluation against pfn_large not run yet.
+
+### 2026-11-10 12:30 — Issue #3 (noisy two-headed PFN): mandate
+
+Mandate (Tim, 2026-11-10): build the noise PFN of the "learned acquisition policies on a PFN surrogate"
+problem statement here in pfn-repro (issue #3; cite Decoupled PFNs, arXiv:2605.06413), the selector
+work in anytime-acquisition. Report intermediate results with executed notebooks. Allowed launches: local
+CPU scratch/sanity runs, then scratch timing probes and one detached pilot sweep per experiment on ulysses
+(after `just remote-ps` shows it idle). Branch `exp/3-noisy-bnn-pfn` (worktree `../pfn-repro-noisy`, so the
+`exp/4-pfn-mf` checkout stays untouched).

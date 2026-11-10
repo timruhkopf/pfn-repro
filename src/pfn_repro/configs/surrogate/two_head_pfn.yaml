@@ -1,0 +1,10 @@
+# PFN with a latent and a noisy bar head (surrogates/two_head_pfn.py). Defaults: the smoke size.
+_target_: pfn_repro.surrogates.two_head_pfn.TwoHeadPFN
+d_model: 64
+n_heads: 4
+n_layers: 4
+d_ff: 128
+n_bins: 64
+noisy_n_bins: null       # null: same bin width as the latent head over [noisy_lo, noisy_hi]
+noisy_lo: -1.0
+noisy_hi: 2.0

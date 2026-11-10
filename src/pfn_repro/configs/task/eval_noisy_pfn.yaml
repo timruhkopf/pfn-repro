@@ -1,0 +1,26 @@
+# Stage-0 checks of a two-headed PFN on the noisy prior (tasks/eval_noisy_pfn.py, issue #3).
+name: eval_noisy_pfn
+checkpoint: ???           # a train_noisy_pfn member's checkpoint.pt
+device: auto
+threads: 8
+data_seed: 333_000        # disjoint from training (seed) and its validation (20_000 + regime)
+context_sizes: [1, 2, 5, 10, 20, 50, 100]
+n_functions: 256          # per regime
+chunk: 64
+n_test: 200
+pit_bins: 20
+martingale:
+  n_functions: 256
+  chunk: 32
+  context_sizes: [5, 20, 50]
+  n_probe: 64
+  n_fantasies: 32
+probes:
+  n_functions: 2048
+  chunk: 128
+  context_sizes: [2, 4, 8, 12, 16, 24, 32, 48]
+  n_probe: 256
+slices:
+  n_functions: 3
+  n_grid: 200
+  contexts: [5, 20, 50]
