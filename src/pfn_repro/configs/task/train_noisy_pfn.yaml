@@ -1,0 +1,24 @@
+# Two-headed PFN on the noisy BNN prior (tasks/train_noisy_pfn.py, issue #3). Select prior=noisy_bnn,
+# surrogate=two_head_pfn. One fixed input dimension per run (the plan trains d = 2, 4, 8 separately).
+name: train_noisy_pfn
+device: auto
+x_dim: 2
+batch_size: 64
+trainer:
+  n_steps: 1000
+  min_train: 1
+  max_train: 100           # T up to 80 plus an initial design
+  n_test: 256
+  lr: 3.0e-4
+  warmup_steps: 100
+  grad_clip: 1.0
+  log_every: 100
+  save_every: null
+  mixed_precision: false   # bf16 autocast, CUDA only
+  latent_weight: 1.0
+  noisy_weight: 1.0
+validation:
+  context_sizes: [5, 20, 50]
+  n_functions: 64
+  n_points: 200
+  every_n_steps: null      # null: every trainer.log_every

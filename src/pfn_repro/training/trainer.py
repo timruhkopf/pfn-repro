@@ -112,6 +112,14 @@ class PFNTrainer:
     def forward(self, batch: dict) -> torch.Tensor:
         return self.model(**batch)
 
+    def loss(self, logits, y_te) -> torch.Tensor:
+        """Training loss from the forward output and the targets (hook; default: bar-distribution NLL)."""
+        return self.bar_dist(logits.float(), y_te).mean()
+
+    def train_metrics(self, logits, y_te) -> dict:
+        """Extra metrics at log steps (hook; default: squared error of the predictive mean)."""
+        return {"mse/train": (self.bar_dist.mean(logits.float()) - y_te).square().mean().item()}
+
     def _save(self, step: int, history: dict, optimizer, scheduler, generator) -> None:
         self.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.checkpoint_path.with_suffix(".tmp")
@@ -178,7 +186,7 @@ class PFNTrainer:
             batch, y_te = self.sample_batch(step, n_train, generator)
             with torch.autocast(device_type=device_type, dtype=torch.bfloat16, enabled=use_amp):
                 logits = self.forward(batch)
-            loss = self.bar_dist(logits.float(), y_te).mean()
+            loss = self.loss(logits, y_te)
 
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -189,8 +197,8 @@ class PFNTrainer:
 
             if step % self.log_every == 0 or step == self.n_steps - 1:
                 with torch.no_grad():
-                    mse = (self.bar_dist.mean(logits.float()) - y_te).square().mean().item()
-                metrics = {"nll/train": loss.item(), "mse/train": mse, "grad_norm": grad_norm,
+                    extra = self.train_metrics(logits, y_te)
+                metrics = {"nll/train": loss.item(), **extra, "grad_norm": grad_norm,
                            "lr": scheduler.get_last_lr()[0]}
                 self.model.eval()
                 metrics.update(self.callback_handler.run(step, self, self.log_every))
@@ -198,7 +206,7 @@ class PFNTrainer:
                 history["step"].append(step)
                 for k, v in metrics.items():
                     history.setdefault(k, []).append(v)
-                print(f"step {step:7d}  nll={loss.item():.4f}  mse={mse:.4f}  n_train={n_train}  "
+                print(f"step {step:7d}  nll={loss.item():.4f}  n_train={n_train}  "
                       f"({time.perf_counter() - t0:.0f}s)", flush=True)
                 if self.on_log is not None:
                     self.on_log(step, metrics)

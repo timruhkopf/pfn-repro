@@ -9,8 +9,8 @@
 
 | Concern | Module | Contents |
 |---|---|---|
-| priors | `pfn_repro.priors` | `bnn.BNNPrior` (PFNs4BO-style BO functions, ECDF-scaled y), `mf.MFPrior` (ifBO's learning-curve prior) |
-| surrogates | `pfn_repro.surrogates` | `PFN` (row tokens, train↔train + test→train attention), `TabPFN` (TabPFN-v2-style cell tokens, feature + item attention, thinking rows) |
+| priors | `pfn_repro.priors` | `bnn.BNNPrior` (PFNs4BO-style BO functions, ECDF-scaled y), `mf.MFPrior` (ifBO's learning-curve prior), `noisy_bnn.NoisyBNNPrior` (latent BNN + SNR-relative noise, privileged f and noise targets) |
+| surrogates | `pfn_repro.surrogates` | `PFN` (row tokens, train↔train + test→train attention), `TabPFN` (TabPFN-v2-style cell tokens, feature + item attention, thinking rows), `TwoHeadPFN` (latent + noisy bar heads, after Decoupled PFNs, Bergna et al. 2026) |
 | acquisitions | `pfn_repro.acquisitions` | `standard` (PI, EI, UCB, MES, std from the bar distribution), `alpha_pfn` (amortized Entropy Search: conditioned PFN, targets, trainers) |
 | objectives | `pfn_repro.objectives` | `BarDistribution` (piecewise-uniform output distribution: NLL, mean, quantiles, EI/PI) |
 | checkpoints | `pfn_repro.checkpoints` | registry pinned by sha256: `pfn_smoke`, `pfn_large`, `alpha_conditioned_large`, `alpha_pes_large` |

@@ -1,0 +1,23 @@
+seed: 0
+task.checkpoint: /home/ruhkopf/PycharmProjects/pfn-repro-noisy/runs/noisy_pfn/sanity_20261110-115538/0/checkpoint.pt
+task.chunk: 64
+task.context_sizes: '[1, 2, 5, 10, 20, 50, 100]'
+task.data_seed: 333000
+task.device: cpu
+task.martingale.chunk: 32
+task.martingale.context_sizes: '[5, 20, 50]'
+task.martingale.n_fantasies: 32
+task.martingale.n_functions: 64
+task.martingale.n_probe: 64
+task.n_functions: 128
+task.n_test: 200
+task.name: eval_noisy_pfn
+task.pit_bins: 20
+task.probes.chunk: 128
+task.probes.context_sizes: '[2, 4, 8, 12, 16, 24, 32, 48]'
+task.probes.n_functions: 1024
+task.probes.n_probe: 256
+task.slices.contexts: '[5, 20, 50]'
+task.slices.n_functions: 3
+task.slices.n_grid: 200
+task.threads: 8

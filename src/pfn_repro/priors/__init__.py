@@ -7,6 +7,7 @@ count, passed to the surrogate as `n_features`), `B`, `d` and `generator` (a `to
 whose state the trainer checkpoints).
 
 - `bnn.BNNPrior`: BO functions from random deep tanh networks, y on the training ECDF scale (PFNs4BO).
+- `noisy_bnn.NoisyBNNPrior`: the BNN as a latent signal plus SNR-relative observation noise (issue #3).
 - `mf.MFPrior`: learning curves over (configuration, fidelity) (ifBO's FT-PFN prior).
 """
 
@@ -36,6 +37,12 @@ def build_prior(
             ecdf_sorted=load_ecdf(device),
             device=device,
             **params,
+        )
+    if name == "noisy_bnn":
+        from .noisy_bnn import NoisyBNNPrior
+
+        return NoisyBNNPrior(
+            batch_size=batch_size, x_dim=x_dim, variable_dim_min=variable_dim_min, seed=seed, device=device, **params
         )
     if name == "mf":
         from .mf import MFPrior

@@ -73,3 +73,38 @@ laptop; `sha256sum` identical on both (d4141d53…). Provenance read from the ch
 git_commit 6567285) and MLflow (`just mlflow-sync`; run 315b763c…). Golden outputs computed once and
 pinned; `tests/unit/test_checkpoints.py` 8 passed. Snapshot `results/tabpfn_bnn/pilot_20261021-142330`.
 v0.2.0. Evaluation against pfn_large not run yet.
+
+### 2026-11-10 12:30 — Issue #3 (noisy two-headed PFN): mandate
+
+Mandate (Tim, 2026-11-10): build the noise PFN of the "learned acquisition policies on a PFN surrogate"
+problem statement here in pfn-repro (issue #3; cite Decoupled PFNs, arXiv:2605.06413), the selector
+work in anytime-acquisition. Report intermediate results with executed notebooks. Allowed launches: local
+CPU scratch/sanity runs, then scratch timing probes and one detached pilot sweep per experiment on ulysses
+(after `just remote-ps` shows it idle). Branch `exp/3-noisy-bnn-pfn` (worktree `../pfn-repro-noisy`, so the
+`exp/4-pfn-mf` checkout stays untouched).
+
+### 2026-11-10 13:00 — noisy_pfn: code (fbf6bdb), timing probe, pilot launched (118adaa)
+
+- Code committed at fbf6bdb: `NoisyBNNPrior`, `TwoHeadPFN`, `NoisyPFNTrainer`, `train_noisy_pfn`,
+  `eval_noisy_pfn`; 18 new unit tests pass, lint/pyright clean; notebook descriptions 06 / 07 (GO/NO-GO)
+  written before any run. Latent ECDF assets for d = 2, 4, 8 fitted on CPU (seed 12345) and committed.
+- Timing probe on ulysses (scratch, d = 8, batch 64, bf16): 0.23 s/step (400 steps in 91 s); GPU was idle.
+- Launched `just remote sweep detached pilot experiment=noisy_pfn task.x_dim=2,4,8` →
+  `runs/noisy_pfn/pilot_20261110-115759` (40k steps per member, members in sequence, ~2.6 h each).
+  Verified with `just remote-ps`: launcher pid 1728560 and member 0 (d = 2) running, step 0 logged.
+- In parallel: a local `sanity` run (CPU, small model) to test the eval chain and notebook 07 end to end.
+
+### 2026-11-10 12:20 — Sanity runs done (95ca98e); push blocked by the pre-push hook in a worktree
+
+- Sanity: `noisy_pfn` sanity_20261110-115538 and `eval_noisy_pfn` sanity_20261110-120518 (snapshots committed);
+  the eval found the variance-based noise estimate tail-dominated (fixed at 3206226, see the log entry).
+- `git push` from the worktree ran the pre-push hook (full pytest). Inside a worktree the hook's git
+  environment leaks into the template tests' temporary repos: 14 errors in `tests/template/test_codesync.py`
+  / `test_provenance.py`, and those tests wrote into the *shared* `.git`: `core.bare = true` and a
+  `[user] test <test@example.com>` section in `.git/config`, plus an emptied worktree index. Repaired at
+  12:18: `core.bare = false`, the injected `[user]` section removed (damaged copy kept in the session
+  scratchpad), worktree index rebuilt from HEAD (`git reset`, no files touched). Verified: the main checkout
+  is back on `exp/4-pfn-mf` with only its two earlier local edits; refs, tags and commit authors intact.
+  The same suite passes outside the hook (105 passed, 4 skipped). Branch not pushed yet (needs Tim's call
+  on bypassing the hook); template fix: run the template tests' git calls with GIT_DIR / GIT_INDEX_FILE /
+  GIT_WORK_TREE removed from the environment.

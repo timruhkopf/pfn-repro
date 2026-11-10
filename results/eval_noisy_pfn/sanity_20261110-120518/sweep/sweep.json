@@ -1,0 +1,25 @@
+{
+ "id": "sanity_20261110-120518",
+ "experiment": "eval_noisy_pfn",
+ "stage": "sanity",
+ "kind": "grid",
+ "command": "just run local sanity experiment=eval_noisy_pfn task.checkpoint=/home/ruhkopf/PycharmProjects/pfn-repro-noisy/runs/noisy_pfn/sanity_20261110-115538/0/checkpoint.pt task.device=cpu task.n_functions=128 task.martingale.n_functions=64 task.probes.n_functions=1024",
+ "overrides": [
+  "experiment=eval_noisy_pfn",
+  "task.checkpoint=/home/ruhkopf/PycharmProjects/pfn-repro-noisy/runs/noisy_pfn/sanity_20261110-115538/0/checkpoint.pt",
+  "task.device=cpu",
+  "task.n_functions=128",
+  "task.martingale.n_functions=64",
+  "task.probes.n_functions=1024"
+ ],
+ "backend": "local",
+ "commit": "32062266bd644491474fbf75aaceb83db51329bb",
+ "branch": "exp/3-noisy-bnn-pfn",
+ "tag": "sweep/eval_noisy_pfn/sanity_20261110-120518",
+ "allow_dirty": false,
+ "dirty_paths": [],
+ "editable_dependencies": {},
+ "host": "ruhkopf-XPS-15-9510",
+ "created": "2026-11-10T12:05:18",
+ "n_members": 1
+}

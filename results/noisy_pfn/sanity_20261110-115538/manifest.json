@@ -1,0 +1,42 @@
+{
+ "id": "sanity_20261110-115538",
+ "experiment": "noisy_pfn",
+ "stage": "sanity",
+ "kind": "grid",
+ "command": "just run local sanity experiment=noisy_pfn task.device=cpu task.trainer.mixed_precision=false surrogate.d_model=64 surrogate.n_heads=4 surrogate.n_layers=3 surrogate.d_ff=128 surrogate.n_bins=100 task.batch_size=16 task.trainer.n_steps=1500 task.trainer.warmup_steps=100 task.trainer.log_every=100 task.trainer.save_every=500 task.validation.every_n_steps=500 task.trainer.max_train=50 task.trainer.n_test=64",
+ "overrides": [
+  "experiment=noisy_pfn",
+  "task.device=cpu",
+  "task.trainer.mixed_precision=false",
+  "surrogate.d_model=64",
+  "surrogate.n_heads=4",
+  "surrogate.n_layers=3",
+  "surrogate.d_ff=128",
+  "surrogate.n_bins=100",
+  "task.batch_size=16",
+  "task.trainer.n_steps=1500",
+  "task.trainer.warmup_steps=100",
+  "task.trainer.log_every=100",
+  "task.trainer.save_every=500",
+  "task.validation.every_n_steps=500",
+  "task.trainer.max_train=50",
+  "task.trainer.n_test=64"
+ ],
+ "backend": "local",
+ "commit": "fbf6bdb5caf8e1996484a0093ed97f149d13600a",
+ "branch": "exp/3-noisy-bnn-pfn",
+ "tag": "sweep/noisy_pfn/sanity_20261110-115538",
+ "allow_dirty": false,
+ "host": "ruhkopf-XPS-15-9510",
+ "created": "2026-11-10T11:55:38",
+ "editable_dependencies": {},
+ "status_counts": {
+  "DONE": 1
+ },
+ "first_start": "2026-11-10T11:55:40",
+ "last_end": "2026-11-10T12:02:37",
+ "wall_h": 0.116,
+ "device_h": 0.0,
+ "snapshot_created": "2026-11-10T12:06:58",
+ "sweep_dir": "runs/noisy_pfn/sanity_20261110-115538"
+}

@@ -1,0 +1,6 @@
+# @package _global_
+# Stage-0 checks of a noisy_pfn checkpoint (issue #3): calibration of both heads per regime, the
+# total-variance identity, the martingale self-test, identifiability probes vs context size, 1-d slices.
+# Launch with task.checkpoint=<runs/noisy_pfn/<sweep>/<member>/checkpoint.pt>.
+defaults:
+  - override /task: eval_noisy_pfn
