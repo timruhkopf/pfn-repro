@@ -1,7 +1,8 @@
 # @package _global_
 # Two-headed PFN (latent + noisy bar heads) on the noisy BNN prior (issue #3). One run per input dimension
 # (sweep task.x_dim=2,4,8; the plan trains d separately first). pfn_large-like backbone, 6 layers; the
-# noisy head has the latent head's bin width over [-1, 2] (3x the bins). Steps from the ulysses timing probe.
+# noisy head has the latent head's bin width over [-1, 2] (3x the bins). Timing probe on ulysses (2026-11-10,
+# fbf6bdb, d=8, batch 64, bf16): 0.23 s/step, so 40k steps ~ 2.6 h per d (pfn_large: 1.5M steps). A pilot budget.
 defaults:
   - /prior: noisy_bnn
   - /surrogate: two_head_pfn
@@ -12,8 +13,8 @@ task:
   x_dim: 2
   batch_size: 64
   trainer:
-    n_steps: 100000
-    warmup_steps: 2000
+    n_steps: 40000
+    warmup_steps: 1000
     log_every: 500
     save_every: 5000
     mixed_precision: true
