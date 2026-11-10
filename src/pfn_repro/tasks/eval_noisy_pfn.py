@@ -50,6 +50,15 @@ def bar_moments(bd, logits: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, t
     return mean, var, (p * z**3).sum(-1), (p * z**4).sum(-1)
 
 
+def robust_noise_scale(bd, lat: torch.Tensor, nbd, noi: torch.Tensor) -> torch.Tensor:
+    """sqrt(IQR_noisy^2 - IQR_latent^2) / 1.349: the noise's robust scale if latent and noise were
+    Gaussian and independent. Unlike Var_noisy - Var_latent it ignores the tails, which the noisy head
+    must keep for outliers and heavy-tailed families it cannot rule out."""
+    iqr_l = bd.icdf(lat, 0.75) - bd.icdf(lat, 0.25)
+    iqr_n = nbd.icdf(noi, 0.75) - nbd.icdf(noi, 0.25)
+    return (iqr_n.square() - iqr_l.square()).clamp(min=0).sqrt() / 1.349
+
+
 # ---------------------------------------------------------------- sections
 
 
@@ -81,6 +90,7 @@ def calibration(model, prior_cfg, ecdf, t, dev, seed) -> tuple[pd.DataFrame, pd.
             e = prior.sample_noisy_episode(n_max, t.n_test)
             props = _props_frame(prior, offset=(r_i * 10_000 + c * t.chunk))
             var_true = prior.noise_var(e.x_test, e.f_test)
+            s_true = prior.noise_scale(e.x_test, e.f_test)
             for n in t.context_sizes:
                 lat, noi = model.forward_both(e.x_train[:, :n], e.y_train[:, :n], e.x_test, prior.active_dim)
                 lat, noi = lat.float(), noi.float()
@@ -111,6 +121,8 @@ def calibration(model, prior_cfg, ecdf, t, dev, seed) -> tuple[pd.DataFrame, pd.
                     v_est = nbd.variance(noi) - bd.variance(lat)
                     ok = (prior.family != FAMILIES.index("contaminated")).cpu().numpy()
                     est, tru = v_est.cpu().numpy(), var_true.cpu().numpy()
+                    s_est = robust_noise_scale(bd, lat, nbd, noi).cpu().numpy()
+                    s_tru = s_true.cpu().numpy()
                     for b in np.flatnonzero(ok):
                         pos = est[b] > 1e-10
                         logr = np.log(est[b][pos] / tru[b][pos]) if pos.any() else np.array([np.nan])
@@ -131,6 +143,14 @@ def calibration(model, prior_cfg, ecdf, t, dev, seed) -> tuple[pd.DataFrame, pd.
                                 "spearman": float(rho),
                                 "true_var_mean": float(tru[b].mean()),
                                 "est_var_mean": float(est[b].mean()),
+                                "robust_median_log_ratio": float(
+                                    np.median(np.log(np.maximum(s_est[b], 1e-6) / s_tru[b]))
+                                ),
+                                "robust_spearman": float(
+                                    pd.Series(s_est[b]).corr(pd.Series(s_tru[b]), method="spearman")
+                                    if regime == "hetero"
+                                    else np.nan
+                                ),
                             }
                         )
     return pd.concat(rows, ignore_index=True), pd.concat(pits, ignore_index=True), pd.DataFrame(tv)
@@ -191,6 +211,8 @@ FEATURES = [
     "noisy_skew",
     "noisy_kurt",
     "noise_at_best",
+    "robust_noise_log",
+    "robust_noise_cv",
 ]
 
 
@@ -214,6 +236,7 @@ def probe_features(model, prior_cfg, ecdf, t, dev, seed) -> pd.DataFrame:
             mu_l, var_l, _, _ = bar_moments(model.bar_dist, lat)
             _, var_n, sk_n, ku_n = bar_moments(model.noisy_bar_dist, noi)
             nstd = (var_n - var_l).clamp(min=0).sqrt()
+            rob = robust_noise_scale(model.bar_dist, lat[:, : p.n_probe], model.noisy_bar_dist, noi[:, : p.n_probe])
             P = p.n_probe
             nstd_p = nstd[:, :P]
             resid = (y_tr - mu_l[:, P:]) / var_n[:, P:].sqrt()
@@ -233,6 +256,8 @@ def probe_features(model, prior_cfg, ecdf, t, dev, seed) -> pd.DataFrame:
                 "noisy_skew": sk_n[:, :P].mean(1),
                 "noisy_kurt": ku_n[:, :P].mean(1),
                 "noise_at_best": nstd[:, P:].gather(1, best)[:, 0],
+                "robust_noise_log": rob.mean(1).clamp(min=1e-4).log(),
+                "robust_noise_cv": rob.std(1) / rob.mean(1).clamp(min=1e-4),
             }
             frame = props.copy()
             frame["n"] = n
