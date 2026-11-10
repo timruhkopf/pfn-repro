@@ -1,0 +1,1 @@
+{"member": 0, "overrides": ["experiment=eval_noisy_pfn", "task.checkpoint=/home/ruhkopf/PycharmProjects/pfn-repro-noisy/runs/noisy_pfn/sanity_20261110-115538/0/checkpoint.pt", "task.device=cpu", "task.n_functions=128", "task.martingale.n_functions=64", "task.probes.n_functions=1024"]}
